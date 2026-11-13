@@ -56,4 +56,6 @@ share-playground.html            save and share five tokens
 
 The site is served by GitHub Pages from the `main` branch (root folder). Pushing to `main` redeploys it in a minute or two.
 
+It also deploys to Vercel as a static site: `vercel.json` turns off the build step and serves the root folder, and `.vercelignore` keeps local tooling and private notes out of the upload.
+
 Share links are built from the address the tool is opened at, so links copied from the hosted site work for anyone. Links copied on `localhost` only work on your machine.

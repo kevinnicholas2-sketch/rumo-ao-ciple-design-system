@@ -1,0 +1,5 @@
+.agents/
+.claude/
+.git/
+skills-lock.json
+design-system-brief.md

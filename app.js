@@ -257,8 +257,8 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const PX = v => v + ' px', PT = v => v + ' pt', X2 = v => v.toFixed(2), RT = v => String(+v.toFixed(3));
 const SLIDERS = {
   typoWeb: [
-    ['type.title', 'Page title', 28, 40, 1, PX, 'title'],
-    ['type.titleMobile', 'Page title', 22, 30, 1, PX, 'titleMobile'],
+    ['type.title', 'Page title, desktop', 28, 40, 1, PX, 'title'],
+    ['type.titleMobile', 'Page title, mobile', 22, 30, 1, PX, 'titleMobile'],
     ['type.section', 'Section heading', 18, 28, 1, PX, 'section'],
     ['type.reading', 'Reading passage', 16, 22, 1, PX, 'reading'],
     ['type.instr', 'Instructions', 14, 18, 1, PX, 'instr'],
@@ -282,9 +282,11 @@ const SLIDERS = {
   ],
 };
 const sid = p => 's-' + p.replace(/\./g, '-');
+const SLIDER_SCOPE = { 'type.title': 'web', 'type.titleMobile': 'mobile', 'type.section': 'web social', 'type.reading': 'mobile social', 'type.instr': 'web mobile', 'type.label': 'web mobile social', 'type.display': 'social',
+  'type.printTitle': 'print', 'type.printBody': 'print', 'layout.cols': 'grid' };
 function sliderHTML([path, label, min, max, step]) {
-  const id = sid(path);
-  return `<div class="field"><label for="${id}">${label}<output id="${id}-o"></output></label><input type="range" id="${id}" data-path="${path}" min="${min}" max="${max}" step="${step}"></div>`;
+  const id = sid(path), sc = SLIDER_SCOPE[path];
+  return `<div class="field"${sc ? ` data-for="${sc}"` : ''}><label for="${id}">${label}<output id="${id}-o"></output></label><input type="range" id="${id}" data-path="${path}" min="${min}" max="${max}" step="${step}"></div>`;
 }
 const fontOptions = sel => Object.keys(FONTS).map(f => `<option${f === sel ? ' selected' : ''}>${f}</option>`).join('');
 const colorField = (path, label, hint, idBase, extra = '') => `
@@ -379,21 +381,14 @@ function buildPanel() {
     <label class="check"><input type="checkbox" data-path="type.scale.on"> Drive the text sizes from this scale</label>
     <fieldset class="scale-ctl" id="scaleCtl">
       <legend class="sr">Scale controls</legend>
-      <p class="hint pad" id="scaleHint"></p>
       ${sliderHTML(SLIDERS.scale[0])}
       <div class="field"><label for="ratioPreset">Ratio</label><select id="ratioPreset">${RATIO_PRESETS.map(([n, v]) => `<option value="${v}">${n}</option>`).join('')}<option value="custom">Custom</option></select></div>
       ${sliderHTML(SLIDERS.scale[1])}
       <div class="scale-out" id="scaleOut"></div>
     </fieldset>
-    <div class="sizes">
-      <h3>Desktop <span class="hint sizeLock"></span></h3>
-      ${[0, 2, 4, 5].map(i => sliderHTML(SLIDERS.typoWeb[i])).join('')}
-      <h3>Mobile <span class="hint sizeLock"></span></h3>
-      ${[1, 3].map(i => sliderHTML(SLIDERS.typoWeb[i])).join('')}
-      <h3>Social post <span class="hint sizeLock"></span></h3>
-      ${sliderHTML(SLIDERS.typoWeb[6])}
-    </div>
-    <details class="more"><summary>Sizes: print</summary>${SLIDERS.typoPrint.map(sliderHTML).join('')}</details>
+    <p class="hint pad" id="scaleNote">Text sizes come from the scale above. Untick the box to set each size by hand.</p>
+    <div class="sizes">${SLIDERS.typoWeb.map(sliderHTML).join('')}</div>
+    <details class="more" data-for="print"><summary>Sizes: print</summary>${SLIDERS.typoPrint.map(sliderHTML).join('')}</details>
     <details class="more"><summary>Line height and tracking</summary>
       <p class="hint pad">Line height is a multiple of the font size and tracking is in em. Set per step. A note turns amber outside the guideline; it is a nudge, not an error.</p>
       ${SP_ROWS}
@@ -414,36 +409,36 @@ function buildPanel() {
       <tbody>${SPACE_STEPS.map(n => `<tr data-sp-n="${n}"><td class="n">space-${n}</td><td class="m">${n} × base</td><td class="pxv"></td><td><div class="spbar" style="--w:var(--cip-space-${n})"></div></td></tr>`).join('')}</tbody></table>
     <button type="button" class="btn wide" data-act="showspace">See the sample cards</button>
   </div>
-  <div class="grp"><h2>Layout grid</h2>
+  <div class="grp" data-for="grid snap strategy respcontent"><h2>Layout grid</h2>
     ${SLIDERS.layout.map(sliderHTML).join('')}
-    <div class="two">
+    <div class="two" data-for="grid">
       <div class="field"><label for="l-g">Gutter</label><select id="l-g" data-path="layout.g" data-num>${SPACE_STEPS.map(n => `<option value="${n}"></option>`).join('')}</select></div>
       <div class="field"><label for="l-m">Outer margin</label><select id="l-m" data-path="layout.m" data-num>${SPACE_STEPS.map(n => `<option value="${n}"></option>`).join('')}</select></div>
     </div>
-    <label class="check"><input type="checkbox" data-path="layout.overlay"> Show the grid over every preview</label>
-    <label class="check"><input type="checkbox" data-path="layout.snap"> Snap the web dashboard to the grid</label>
-    <button type="button" class="btn wide" data-act="showgrid">See the column grid</button>
-    <div class="field"><span class="lbl">Responsive strategy</span>
+    <label class="check" data-for="grid"><input type="checkbox" data-path="layout.overlay"> Show the grid over every preview</label>
+    <label class="check" data-for="snap"><input type="checkbox" data-path="layout.snap"> Snap the web dashboard to the grid</label>
+    <button type="button" class="btn wide" data-act="showgrid" data-for="grid">See the column grid</button>
+    <div class="field" data-for="strategy"><span class="lbl">Responsive strategy</span>
       <div class="seg unit-seg" role="radiogroup" aria-label="Responsive mode">
         <label><input type="radio" name="rmode" value="fluid"><span>Fluid</span></label>
         <label><input type="radio" name="rmode" value="adaptive"><span>Adaptive</span></label>
         <label><input type="radio" name="rmode" value="combo"><span>Combination</span></label>
       </div></div>
-    <div class="field"><span class="lbl">Responsive frame shows</span>
+    <div class="field" data-for="respcontent"><span class="lbl">Responsive frame shows</span>
       <div class="seg unit-seg" role="radiogroup" aria-label="Responsive frame content">
         <label><input type="radio" name="rcontent" value="web"><span>Dashboard</span></label>
         <label><input type="radio" name="rcontent" value="mobile"><span>Reading</span></label>
         <label><input type="radio" name="rcontent" value="cards"><span>Cards</span></label>
       </div></div>
-    <span class="lbl">Breakpoints (px): 2, 3 and 4 columns</span>
-    <div class="three">
+    <span class="lbl" data-for="strategy">Breakpoints (px): 2, 3 and 4 columns</span>
+    <div class="three" data-for="strategy">
       <div class="field"><label for="l-bp0">2 cols</label><input type="number" id="l-bp0" data-path="layout.bp0" min="240" max="900" step="10" data-num></div>
       <div class="field"><label for="l-bp1">3 cols</label><input type="number" id="l-bp1" data-path="layout.bp1" min="240" max="900" step="10" data-num></div>
       <div class="field"><label for="l-bp2">4 cols</label><input type="number" id="l-bp2" data-path="layout.bp2" min="240" max="900" step="10" data-num></div>
     </div>
-    <button type="button" class="btn wide" data-act="showresp">See the responsive frame</button>
+    <button type="button" class="btn wide" data-act="showresp" data-for="strategy">See the responsive frame</button>
   </div>
-  <div class="grp"><h2>Layout checks</h2>
+  <div class="grp" data-for="checks"><h2>Layout checks</h2>
     <p class="hint pad">Runs the real dashboard and reading screens at these widths, using the strategy and breakpoints above.</p>
     <div class="four">
       <div class="field"><label for="l-t0">Width 1</label><input type="number" id="l-t0" data-path="layout.t0" min="240" max="1600" step="1" data-num></div>
@@ -492,14 +487,12 @@ function syncPanel() {
     if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
   });
   $$('[data-hex]').forEach(el => { if (el === active) return; el.value = get(state, el.dataset.hex); el.classList.remove('bad'); });
-  SLIDERS.typoWeb.forEach(([path, , , , , , k]) => { const el = $('#' + sid(path)); if (el) el.disabled = lock; });
   SLIDERS.typoWeb.forEach(([path, , , , , fmt, k]) => { const o = $('#' + sid(path) + '-o'); if (o) o.textContent = fmt(r1(lock ? z[k] : get(state, path))); });
   [SLIDERS.typoPrint, SLIDERS.lhReading, SLIDERS.scale, SLIDERS.space, SLIDERS.layout, SLIDERS.shape].flat().forEach(([path, , , , , fmt]) => {
     const o = $('#' + sid(path) + '-o'); if (o) o.textContent = fmt(get(state, path));
   });
-  $$('.sizeLock').forEach(e => { e.textContent = lock ? '(set by the scale)' : ''; });
-  $('#scaleCtl').disabled = !lock;
-  $('#scaleHint').textContent = lock ? '' : 'Off. Tick the box above to use the scale; these controls change nothing until then.';
+  $('#scaleCtl').hidden = !lock; $('#scaleNote').hidden = !lock;
+  applyScope();
 
   const sc = state.type.scale, rp = $('#ratioPreset');
   rp.value = RATIO_PRESETS.some(([, v]) => v === sc.ratio) ? String(sc.ratio) : 'custom';
@@ -1291,9 +1284,34 @@ function renderCompare() {
     holder.innerHTML = `<div class="slot"><div class="fit" data-w="${cmpScreen === 'web' ? 960 : 360}"></div></div>`;
     holder.querySelector('.fit').appendChild(c);
   });
-  fit();
+  fit(); applyScope();
 }
 const scheduleCompare = () => { clearTimeout(cmpT); cmpT = setTimeout(renderCompare, 350); };
+
+/* ---------- Design Options show only what applies to the preview on screen ---------- */
+const ALL_TAGS = ['web', 'mobile', 'social', 'print', 'grid', 'snap', 'strategy', 'respcontent', 'checks'];
+function scopeTags() {
+  const name = (($('.view.on') || {}).id || 'view-web').replace('view-', ''), L = state.layout;
+  switch (name) {
+    case 'web': return new Set(['web', 'grid', 'snap']);
+    case 'mobile': return new Set(['mobile', 'grid']);
+    case 'social': return new Set(['social', 'grid']);
+    case 'print': return new Set(['print', 'grid']);
+    case 'all': return new Set(['web', 'mobile', 'social', 'print', 'grid', 'snap']);
+    case 'grid': return new Set(['grid', 'snap']);
+    case 'resp': return new Set(['strategy', 'respcontent', L.content === 'cards' ? '' : L.content]);
+    case 'checks': return new Set(['strategy', 'checks', 'web', 'mobile']);
+    case 'compare': return new Set(['strategy', cmpScreen]);
+    case 'health': case 'css': return new Set(ALL_TAGS);
+    default: return new Set();   // sample UI and spacing: colors and tokens only
+  }
+}
+function applyScope() {
+  if (!$('#panel') || viewOnly) return;
+  const set = scopeTags();
+  $$('#panel [data-for]').forEach(el => { el.hidden = !el.dataset.for.split(' ').some(t => set.has(t)); });
+  const sizes = $('#panel .sizes'); if (sizes) sizes.hidden = state.type.scale.on || !$$('.field', sizes).some(f => !f.hidden);
+}
 
 /* ---------- Generate palette, randomize fonts ---------- */
 function generatePalette() {
@@ -1324,6 +1342,7 @@ function showView(name) {
   if (name === 'checks') runChecks();
   if (name === 'health') renderHealth();
   if (name === 'compare') renderCompare();
+  applyScope();
   fit();
 }
 const withMode = pr => Object.assign(clone(pr), { mode: state.mode });
