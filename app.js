@@ -459,6 +459,9 @@ function buildPanel() {
       <button type="button" class="btn" data-act="copycss">Copy tokens.css</button>
       <button type="button" class="btn" data-act="dlcss">Download tokens.css</button>
       <button type="button" class="btn" data-act="dljson">Download theme (.json)</button>
+      <button type="button" class="btn" data-act="dltokens">Download design tokens (.json)</button>
+      <button type="button" class="btn" data-act="dltailwind">Download Tailwind config</button>
+      <button type="button" class="btn" data-act="dlscss">Download SCSS variables</button>
       <button type="button" class="btn" data-act="share">Copy view-only share link</button>
       <button type="button" class="btn" data-act="print">Print worksheet</button>
       <button type="button" class="btn ghost" data-act="showcss">Show CSS in the preview</button>
@@ -690,6 +693,79 @@ function schemaCss(s) {
   const block = (head, list) => { let out = head, g = ''; list.forEach(x => { if (x.group !== g) { out += (g ? '\n' : '') + `  /* ${COMMENT[x.group] || x.group} */\n`; g = x.group; } out += `  ${x.name}: ${x.value};\n`; }); return out + '}\n'; };
   return `/* Rumo ao CIPLE design tokens: ${s.name}. Written by the design system tool. Light is the default; dark overrides only what changes. */\n` +
     block(':root {\n', T.light) + '\n' + block(':root[data-theme="dark"] {\n', T.dark);
+}
+
+/* ---------- Other export formats: design-tokens JSON, Tailwind, SCSS ---------- */
+function resolvedTokens(s) {
+  const T = schemaTokens(s), unit = s.space.unit, darkBy = {};
+  T.dark.forEach(x => { darkBy[x.name] = x.value; });
+  return T.light.map(x => {
+    let v = x.value; const m = v.match(/^calc\((\d+) \* var\(--space-unit\)\)$/);
+    if (m) v = (+m[1] * unit) + 'px';
+    return { group: x.group, key: x.name.slice(2), value: v, dark: darkBy[x.name] };
+  });
+}
+const TOKEN_TYPE = { color: 'color', font: 'fontFamily', line: 'number', space: 'dimension', radius: 'dimension', border: 'dimension', shadow: 'shadow' };
+function tokensJson(s) {
+  const out = { $description: `Rumo ao CIPLE design tokens: ${s.name}. Dark values sit under $extensions.mode.dark.` };
+  resolvedTokens(s).forEach(x => {
+    const g = out[x.group] || (out[x.group] = {});
+    let type = TOKEN_TYPE[x.group];
+    if (x.key.startsWith('font-size') || x.key === 'type-base') type = 'dimension';
+    else if (x.key.startsWith('font-weight')) type = 'fontWeight';
+    else if (x.key === 'font-mono' || x.key.startsWith('font-heading') || x.key.startsWith('font-body')) type = 'fontFamily';
+    const tok = { $value: /^\d+(\.\d+)?$/.test(x.value) && type !== 'fontFamily' ? +x.value : x.value, $type: type };
+    if (x.dark !== undefined && x.dark !== x.value) tok.$extensions = { mode: { dark: x.dark } };
+    g[x.key] = tok;
+  });
+  return JSON.stringify(out, null, 2) + '\n';
+}
+function tailwindConfig(s) {
+  const R = resolvedTokens(s), pick = g => R.filter(x => x.group === g);
+  const lit = v => JSON.stringify(v);
+  const obj = (list, strip) => list.map(x => `      ${lit(x.key.replace(strip, '') || 'DEFAULT')}: ${lit(x.value)},`).join('\n');
+  const vars = (list, strip) => list.map(x => `      ${lit(x.key.replace(strip, '') || 'DEFAULT')}: 'var(--${x.key})',`).join('\n');
+  return `/* Rumo ao CIPLE: ${s.name}. Tailwind theme.extend.
+   Colors and shadows point at the CSS variables in tokens.css, so Dark mode works
+   when <html data-theme="dark"> is set. Load tokens.css on the page too. */
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+${vars(pick('color'), /^color-/)}
+      },
+      boxShadow: {
+${vars(pick('shadow'), /^shadow-/)}
+      },
+      fontFamily: {
+        heading: [${lit(R.find(x => x.key === 'font-heading').value)}],
+        body: [${lit(R.find(x => x.key === 'font-body').value)}],
+        mono: [${lit(R.find(x => x.key === 'font-mono').value)}],
+      },
+      fontSize: {
+${obj(pick('font').filter(x => /^font-size-/.test(x.key)), /^font-size-/)}
+      },
+      spacing: {
+${obj(pick('space').filter(x => /^space-\d+$/.test(x.key)), /^space-/)}
+      },
+      borderRadius: {
+${obj(pick('radius'), /^radius-/)}
+      },
+      borderWidth: {
+${obj(pick('border'), /^border-width-/)}
+      },
+    },
+  },
+};
+`;
+}
+function scssVars(s) {
+  const R = resolvedTokens(s);
+  let out = `// Rumo ao CIPLE: ${s.name}. Light values are the $variables; Dark overrides are in the $dark map.\n`, g = '';
+  R.forEach(x => { if (x.group !== g) { out += `\n// ${x.group}\n`; g = x.group; } out += `$${x.key}: ${x.value};\n`; });
+  const d = R.filter(x => x.dark !== undefined && x.dark !== x.value);
+  out += `\n// dark mode overrides\n$dark: (\n` + d.map(x => `  '${x.key}': ${/,/.test(x.dark) ? '(' + x.dark + ')' : x.dark},`).join('\n') + '\n);\n';
+  return out;
 }
 
 /* ---------- Import: tokens.css, theme .json or a share link ---------- */
@@ -1387,6 +1463,9 @@ function bind() {
       else if (a === 'apply-role') { if (picked) { state.roles[state.mode][applyTarget] = picked; update(); toast(`${applyTarget} (${state.mode}) set to ${picked}`); } }
       else if (a === 'copycss') copy(lastSchema, 'tokens.css copied');
       else if (a === 'dljson') { downloadFile('rumo-ao-ciple-theme.json', JSON.stringify(state, null, 2), 'application/json'); toast('Downloaded the theme .json'); }
+      else if (a === 'dltokens') { downloadFile('rumo-ao-ciple-tokens.json', tokensJson(state), 'application/json'); toast('Downloaded design tokens (.json)'); }
+      else if (a === 'dltailwind') { downloadFile('tailwind.rumo.config.js', tailwindConfig(state), 'text/javascript'); toast('Downloaded the Tailwind config'); }
+      else if (a === 'dlscss') { downloadFile('_tokens.scss', scssVars(state), 'text/x-scss'); toast('Downloaded the SCSS variables'); }
       else if (a === 'import') doImport($('#importText').value, '');
       else if (a === 'dlcss') downloadCss();
       else if (a === 'share') copy(shareUrl(), 'View-only link copied');

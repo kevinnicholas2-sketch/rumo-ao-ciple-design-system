@@ -29,6 +29,7 @@ Then open http://localhost:5173/.
 1. You edit in `index.html`. The tool keeps your current work in the browser's local storage.
 2. **Export > Download tokens.css** writes the theme with the shared token names (`--color-primary`, `--space-4`, `--radius-md` and so on). Light is `:root`; Dark colors sit under `:root[data-theme="dark"]` and shadows are `none` in Dark.
 3. `token-cascade.html` and `share-playground.html` load `tokens.css` and also pick up the main tool's current theme automatically (same browser, same address). Both have a switch to use the `tokens.css` file instead.
+   The Export tab also downloads the same theme as **design tokens (.json)** (W3C-style `$value`/`$type`, Dark under `$extensions.mode.dark`), a **Tailwind config** (`theme.extend`; colors and shadows point at the `tokens.css` variables so Dark works) and **SCSS variables** (Light as `$variables`, Dark in a `$dark` map).
 4. **Export > Import** reads a `tokens.css`, a theme `.json` or a share link back into the tool.
 
 `tokens.css` in this folder is the default theme (Azulejo) written by the tool. The previews inside the main tool use their own `--cip-*` variables; the CSS tab can show either set.
