@@ -38,11 +38,26 @@
         <li><a href="share-playground.html">Share playground</a></li>
       </ul>
     </div>
+    <button class="btn ghost" id="btnHelp" type="button" aria-controls="intro" aria-expanded="false">How to use</button>
     <button class="btn ghost" id="btnReset" type="button">Reset</button>
     <button class="btn" id="btnShare" type="button">Copy share link</button>
     <button class="btn solid" id="btnEdit" type="button" hidden>Open a copy to edit</button>
   </div>
 </header>
+
+<section class="intro" id="intro" aria-labelledby="introH" hidden>
+  <div class="intro-body">
+    <h2 id="introH">How to use this tool</h2>
+    <ol>
+      <li><strong>Design on the left.</strong> Themes, Color, Type, Layout and Export are the tabs in the Design Options panel.</li>
+      <li><strong>See it on the right.</strong> The previews (web dashboard, mobile reading, social post, worksheet and more) update as you change things.</li>
+      <li><strong>Check it.</strong> The Health pill flags contrast and layout problems, with a button that takes you to each one.</li>
+      <li><strong>Take it with you.</strong> Export tokens as CSS, JSON, Tailwind or SCSS, or copy a view-only link. The Playgrounds menu has focused experiments.</li>
+    </ol>
+    <p class="intro-note">Your work is saved in this browser only. Ctrl+Z undoes an edit.</p>
+  </div>
+  <button class="btn solid" id="introClose" type="button">Got it</button>
+</section>
 
 <div class="shell">
   <aside class="panel" id="panel" aria-label="Design settings"></aside>

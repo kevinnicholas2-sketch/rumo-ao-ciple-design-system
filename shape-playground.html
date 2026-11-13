@@ -159,6 +159,8 @@
   .lift h3 { margin: 0 0 4px; font-size: 16px; } .lift p { margin: 0; color: var(--muted); font-size: 14px; }
   @media (prefers-reduced-motion: reduce) { .lift { transition: none; } .lift:hover, .lift:focus-visible { transform: none; } }
   footer { padding: 28px 0 56px; color: var(--muted); font-size: 13px; }
+  @media (pointer: coarse), (max-width: 640px) { nav a { display: inline-block; padding: 8px 2px; } }
+  @media (pointer: coarse), (max-width: 640px) { input[type=number] { min-height: 40px; } }
 </style>
 </head>
 <body>

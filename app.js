@@ -1530,6 +1530,12 @@ function bind() {
   document.addEventListener('click', e => { if (!tl.hidden && !$('#toolsMenu').contains(e.target)) toolsOpen(false); });
   $('#toolsMenu').addEventListener('keydown', e => { if (e.key === 'Escape' && !tl.hidden) { toolsOpen(false); tb.focus(); } });
   $('#toolsMenu').addEventListener('focusout', e => { if (!tl.hidden && !$('#toolsMenu').contains(e.relatedTarget)) toolsOpen(false); });
+  const intro = $('#intro'), helpBtn = $('#btnHelp');
+  const showIntro = open => { intro.hidden = !open; helpBtn.setAttribute('aria-expanded', String(open)); };
+  let seen = false; try { seen = localStorage.getItem('cip-intro-seen') === '1'; } catch (e) {}
+  if (viewOnly) helpBtn.hidden = true; else if (!seen) showIntro(true);
+  helpBtn.addEventListener('click', () => { showIntro(intro.hidden); if (!intro.hidden) intro.scrollIntoView({ block: 'nearest' }); });
+  $('#introClose').addEventListener('click', () => { showIntro(false); try { localStorage.setItem('cip-intro-seen', '1'); } catch (e) {} helpBtn.focus(); });
   $('#btnShare').addEventListener('click', () => copy(shareUrl(), 'View-only link copied'));
   $('#btnReset').addEventListener('click', () => { state = withMode(DEFAULT); update(); toast('Reset to Azulejo'); });
   $('#btnCopyCss').addEventListener('click', () => copy(cssKind === 'shared' ? lastSchema : lastCss, 'CSS copied'));
@@ -1554,12 +1560,13 @@ function enterViewer(s) {
   viewOnly = true; state = s;
   document.body.classList.add('view-only');
   $('#viewBadge').hidden = false; $('#btnEdit').hidden = false;
+  $('#intro').hidden = true; $('#btnHelp').hidden = true;
   showView('web'); update(false);
 }
 function enterEditor(s) {
   viewOnly = false; state = s; H.undo = []; H.redo = []; H.cur = null;
   document.body.classList.remove('view-only');
-  $('#viewBadge').hidden = true; $('#btnEdit').hidden = true;
+  $('#viewBadge').hidden = true; $('#btnEdit').hidden = true; $('#btnHelp').hidden = false;
   buildPanel(); renderSaved(); update();
 }
 

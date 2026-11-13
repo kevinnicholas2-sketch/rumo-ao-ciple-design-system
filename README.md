@@ -36,6 +36,8 @@ Then open http://localhost:5173/.
 
 ## Things worth knowing
 
+- **First-run intro.** The main tool shows a short "How to use this tool" card the first time it opens in a browser. "Got it" hides it for good; the **How to use** button in the top bar brings it back. View-only links skip it.
+- **Phones.** Every page fits a 375px screen without sideways page scrolling (wide tables scroll inside their own box), and buttons, chips, links and fields get larger tap targets on touch screens and narrow windows.
 - **View-only links.** "Copy share link" puts the whole theme in the address (`#s=…`). Anyone with the link can see the theme; the tool opens read-only. `share-playground.html` uses `?s=…` with five values and never reads local themes in read-only mode.
 - **Saved themes** live in the browser's local storage on that device only. Nothing is sent anywhere. Clearing site data deletes them.
 - **Undo and redo** cover design edits (Ctrl+Z, Ctrl+Shift+Z). History lasts for the page session.
