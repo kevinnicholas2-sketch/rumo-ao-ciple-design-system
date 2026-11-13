@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Cascade</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* Page chrome. These colors are fixed so editing a token only changes the table samples and the sample interface. */
+  :root { --pg-bg: #FAFAF7; --pg-ink: #1B1B22; --pg-muted: #62626E; --pg-line: #E1E0D8; --pg-focus: #1E4F94; --pg-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--pg-bg); color: var(--pg-ink); font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  :focus-visible { outline: 2px solid var(--pg-focus); outline-offset: 2px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+  header.page { padding: 28px 0 16px; }
+  header.page nav { font-size: 14px; margin-bottom: 8px; }
+  header.page h1 { margin: 0; font-size: 28px; line-height: 1.15; }
+  header.page p { margin: 6px 0 0; color: var(--pg-muted); max-width: 75ch; }
+  .bar { background: #F1F0EA; border-block: 1px solid var(--pg-line); position: sticky; top: 0; z-index: 20; }
+  .bar .wrap { display: flex; gap: 12px 24px; flex-wrap: wrap; align-items: center; padding-block: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--pg-line); border-radius: 10px; overflow: hidden; background: #fff; }
+  .seg label { cursor: pointer; } .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg span { display: block; padding: 8px 16px; font-weight: 600; }
+  .seg input:checked + span { background: var(--pg-ink); color: #fff; }
+  .seg input:focus-visible + span { outline: 2px solid var(--pg-focus); outline-offset: -3px; }
+  .btn { font: inherit; font-weight: 600; padding: 9px 16px; border: 1px solid var(--pg-line); border-radius: 8px; background: #fff; cursor: pointer; }
+  .btn.dark { background: var(--pg-ink); color: #fff; border-color: var(--pg-ink); }
+  .count { font: 600 13px var(--pg-mono); color: var(--pg-muted); }
+  .err { margin: 16px 0; padding: 12px 14px; border: 1px solid #B3261E; border-radius: 8px; background: #FBE9E7; color: #7A1A14; font-weight: 600; }
+
+  .cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 28px; align-items: start; padding-top: 20px; padding-bottom: 56px; }
+  h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .09em; text-transform: uppercase; color: var(--pg-muted); }
+  .grp { margin-bottom: 22px; }
+  .grp h3 { margin: 0 0 6px; font: 700 14px var(--pg-mono); display: flex; gap: 8px; align-items: baseline; }
+  .grp h3 small { color: var(--pg-muted); font-weight: 600; }
+  table.tk { border-collapse: collapse; width: 100%; font-size: 13px; background: #fff; border: 1px solid var(--pg-line); border-radius: 8px; }
+  table.tk td { padding: 6px 8px; border-bottom: 1px solid var(--pg-line); vertical-align: middle; }
+  table.tk tr:last-child td { border-bottom: 0; }
+  td.nm { font: 600 12px var(--pg-mono); white-space: nowrap; }
+  td.val { width: 40%; }
+  td.val input { width: 100%; font: 12.5px var(--pg-mono); padding: 5px 7px; border: 1px solid var(--pg-line); border-radius: 6px; background: #fff; color: var(--pg-ink); }
+  td.val .res { display: block; font: 11px var(--pg-mono); color: var(--pg-muted); margin-top: 2px; }
+  tr.edited td.nm::after { content: ' ●'; color: #B45309; }
+  tr.edited td.val input { border-color: #B45309; background: #FFF8EC; }
+  td.smp { width: 110px; }
+  td.rv { width: 28px; text-align: center; }
+  td.rv button { border: 0; background: none; cursor: pointer; font-size: 16px; color: var(--pg-muted); visibility: hidden; }
+  tr.edited td.rv button { visibility: visible; }
+
+  /* table samples: the stage shows the current theme's page color */
+  .stage { background: var(--color-bg); border: 1px solid var(--pg-line); border-radius: 6px; padding: 6px; display: flex; align-items: center; min-height: 38px; overflow: hidden; }
+  .sw { width: 100%; height: 24px; border-radius: 4px; border: 1px solid rgba(128,128,128,.35); }
+  .sbar { height: 12px; background: var(--color-primary); max-width: 100%; }
+  .rbox { width: 44px; height: 26px; background: var(--color-primary); }
+  .scard { width: 56px; height: 26px; background: var(--color-surface-raised); border-radius: var(--radius-sm); }
+  .txt { color: var(--color-text); line-height: 1.1; white-space: nowrap; }
+  .bx { width: 52px; height: 26px; border-style: solid; border-color: var(--color-border-strong); }
+
+  .side { position: sticky; top: 72px; display: grid; gap: 16px; }
+  .out { background: #14201B; color: #E8E3D3; padding: 12px 14px; border-radius: 10px; font: 12px/1.55 var(--pg-mono); max-height: 220px; overflow: auto; margin: 0; white-space: pre-wrap; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--pg-ink); color: #fff; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50; }
+  .toast.on { opacity: 1; }
+
+  /* ---------- Sample interface: ONLY var(--token) references for design values ---------- */
+  .ui { background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-size: var(--font-size-md); line-height: var(--line-height-body);
+        padding: var(--space-6); border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-lg); display: grid; gap: var(--space-4); }
+  .ui h1 { margin: 0; font-family: var(--font-heading); font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-heading); color: var(--color-text); }
+  .ui p { margin: 0; color: var(--color-muted); }
+  .ui .row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+  .ui .primary, .ui .secondary { font-family: var(--font-body); font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); padding: var(--space-3) var(--space-6); border-radius: var(--radius-md); cursor: pointer; border: var(--border-width-default) solid var(--color-primary); }
+  .ui .primary { background: var(--color-primary); color: var(--color-on-primary); }
+  .ui .primary:hover { background: var(--color-primary-hover); }
+  .ui .secondary { background: var(--color-surface); color: var(--color-primary); }
+  .ui .primary:focus-visible, .ui .secondary:focus-visible, .ui input:focus-visible { outline: var(--border-width-focus) solid var(--color-focus); outline-offset: var(--border-width-default); }
+  .ui label { display: grid; gap: var(--space-1); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
+  .ui input { font-family: var(--font-body); font-size: var(--font-size-md); padding: var(--space-2) var(--space-3); border: var(--border-width-default) solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); width: 100%; }
+  .ui .badge { display: inline-block; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--color-accent); color: var(--color-on-accent); }
+  .ui .card { background: var(--color-surface-raised); border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); padding: var(--space-4); display: grid; gap: var(--space-2); }
+  .ui .card h2 { margin: 0; font-family: var(--font-heading); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); line-height: var(--line-height-heading); text-transform: none; letter-spacing: normal; color: var(--color-text); }
+
+  @media (max-width: 960px) { .cols { grid-template-columns: 1fr; } .side { position: static; } }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .bar { position: static; }
+    table.tk, table.tk tbody { display: block; }
+    table.tk tr { display: grid; grid-template-columns: minmax(0, 1fr) 96px 28px; gap: 4px 10px; padding: 8px 10px; border-bottom: 1px solid var(--pg-line); align-items: center; }
+    table.tk tr:last-child { border-bottom: 0; }
+    table.tk td { display: block; padding: 0; border: 0; width: auto; }
+    td.nm { grid-column: 1 / -1; white-space: normal; overflow-wrap: anywhere; }
+    td.val { grid-column: 1; }
+    td.smp { width: auto; } td.rv { width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page"><div class="wrap">
+  <nav aria-label="Pages"><a href="index.html">← Design system</a> · <a href="type-playground.html">Type</a> · <a href="color-playground.html">Color</a> · <a href="layout-playground.html">Layout</a> · <a href="shape-playground.html">Shape</a></nav>
+  <h1>Token cascade</h1>
+  <p>Every custom property in <code>tokens.css</code>, read straight from the stylesheet. Edit a value and it is set on the root element, so the sample interface updates through the cascade.</p>
+</div></header>
+
+<div class="bar"><div class="wrap">
+  <div class="seg" role="radiogroup" aria-label="Theme"><label><input type="radio" name="theme" value="light" checked><span>Light</span></label><label><input type="radio" name="theme" value="dark"><span>Dark</span></label></div>
+  <div class="seg" role="radiogroup" aria-label="Token source"><label><input type="radio" name="source" value="main" checked><span>Main tool theme</span></label><label><input type="radio" name="source" value="file"><span>tokens.css file</span></label></div>
+  <span class="count" id="srcNote"></span>
+  <button type="button" class="btn dark" id="copy">Copy edited tokens as CSS</button>
+  <button type="button" class="btn" id="resetAll">Reset edits</button>
+  <span class="count" id="count" role="status"></span>
+</div></div>
+
+<main class="wrap">
+  <div id="error" class="err" hidden></div>
+  <div class="cols">
+    <section aria-labelledby="tH"><h2 id="tH">Tokens</h2><div id="tokens"></div></section>
+    <aside class="side" aria-label="Preview">
+      <section aria-labelledby="uH">
+        <h2 id="uH">Sample interface</h2>
+        <div class="ui" lang="pt-PT">
+          <h1>Bom dia, Marta</h1>
+          <p>Continue de onde ficou. Hoje tem uma sessão de leitura de dez minutos.</p>
+          <div class="row"><button type="button" class="primary">Continuar leitura</button><button type="button" class="secondary">Ver plano</button><span class="badge">Nível A2</span></div>
+          <label>Nome<input type="text" value="Marta Silva"></label>
+          <div class="card"><h2>Próxima sessão</h2><p>Leitura: na pastelaria. Um texto curto e três perguntas.</p></div>
+        </div>
+      </section>
+      <section aria-labelledby="oH"><h2 id="oH">Edited tokens</h2><pre class="out" id="css" aria-live="polite"></pre></section>
+    </aside>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const root = document.documentElement;
+  const tokens = new Map();          // name -> { light, dark }
+  const edits = { all: {}, light: {}, dark: {} };
+  const applied = new Set();
+  let theme = 'light';
+  const rows = new Map();
+
+  /* ---- source: the main tool's current theme (shared through localStorage) or the tokens.css file ---- */
+  let source = new URLSearchParams(location.search).get('source') === 'file' ? 'file' : 'main';
+  function mainTheme() { try { const o = JSON.parse(localStorage.getItem('cip-tokens-css')); return o && typeof o.css === 'string' ? o : null; } catch (e) { return null; } }
+  function applyMainTheme() {
+    const old = $('cip-theme'); if (old) old.remove();
+    const t = mainTheme();
+    if (source === 'main' && t) { const st = document.createElement('style'); st.id = 'cip-theme'; st.textContent = t.css; document.head.appendChild(st); }
+    const have = !!t;
+    document.querySelectorAll('input[name=source]').forEach(r => { r.checked = r.value === (source === 'main' && have ? 'main' : 'file'); if (r.value === 'main') r.disabled = !have; });
+    $('srcNote').textContent = source === 'main' && have ? `Main tool theme “${t.name}”, saved ${new Date(t.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : have ? 'Reading tokens.css' : 'No theme saved by the main tool yet. Reading tokens.css';
+  }
+
+  /* ---- read tokens.css from the stylesheet ---- */
+  function walk(rules) {
+    for (const r of rules) {
+      if (r.style && r.selectorText) {
+        const dark = /data-theme\s*=\s*["']?dark/.test(r.selectorText);
+        for (let i = 0; i < r.style.length; i++) {
+          const n = r.style[i]; if (!n.startsWith('--')) continue;
+          const v = r.style.getPropertyValue(n).trim();
+          const t = tokens.get(n) || { light: undefined, dark: undefined };
+          if (dark) t.dark = v; else t.light = v;
+          tokens.set(n, t);
+        }
+      } else if (r.cssRules) walk(r.cssRules);
+    }
+  }
+  function readSheet() {
+    const sheet = [...document.styleSheets].find(s => s.href && /tokens\.css(\?|#|$)/.test(s.href));
+    if (!sheet) throw new Error('tokens.css did not load. Check that it sits next to this page.');
+    let rules; try { rules = sheet.cssRules; } catch (e) { throw new Error('The browser blocked reading tokens.css (this happens when the page is opened as a file). Serve the folder over http, for example http://localhost:5173/token-cascade.html.'); }
+    walk(rules);
+    const inj = $('cip-theme'); if (inj && inj.sheet) walk(inj.sheet.cssRules);
+    if (!tokens.size) throw new Error('No custom properties were found in tokens.css.');
+  }
+
+  /* ---- helpers ---- */
+  const groupOf = n => n.slice(2).split('-')[0];
+  const darkNames = () => new Set([...tokens].filter(([, t]) => t.dark !== undefined).map(([n]) => n));
+  let dn = new Set();
+  const scopeOf = n => dn.has(n) ? theme : 'all';
+  const authored = (n, t) => theme === 'dark' && t.dark !== undefined ? t.dark : t.light;
+  const current = (n, t) => { const e = edits[scopeOf(n)][n]; return e !== undefined ? e : authored(n, t); };
+  const isEdited = n => edits[scopeOf(n)][n] !== undefined;
+
+  function sample(n) {
+    const v = `var(${n})`, g = groupOf(n);
+    if (g === 'color') return `<div class="stage"><i class="sw" style="display:block;background:${v}"></i></div>`;
+    if (g === 'space') return `<div class="stage"><div class="sbar" style="width:${v}"></div></div>`;
+    if (g === 'radius') return `<div class="stage"><div class="rbox" style="border-radius:${v}"></div></div>`;
+    if (g === 'shadow') return `<div class="stage"><div class="scard" style="box-shadow:${v}"></div></div>`;
+    if (g === 'border') return `<div class="stage"><div class="bx" style="border-width:${v}"></div></div>`;
+    if (g === 'line') return `<div class="stage"><div class="txt" style="line-height:${v};font-size:12px">Aa<br>Bb</div></div>`;
+    if (g === 'font') {
+      if (n.startsWith('--font-size')) return `<div class="stage"><span class="txt" style="font-size:${v}">Aa</span></div>`;
+      if (n.startsWith('--font-weight')) return `<div class="stage"><span class="txt" style="font-weight:${v};font-size:18px">Aa</span></div>`;
+      return `<div class="stage"><span class="txt" style="font-family:${v};font-size:18px">Aa Rumo</span></div>`;
+    }
+    return '';
+  }
+
+  /* ---- build the table, grouped by prefix ---- */
+  function build() {
+    dn = darkNames();
+    const groups = new Map();
+    tokens.forEach((t, n) => { const g = groupOf(n); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(n); });
+    $('tokens').innerHTML = [...groups].map(([g, names]) => `
+      <div class="grp"><h3>${g} <small>${names.length}</small></h3>
+      <table class="tk"><tbody>${names.map(n => `<tr data-n="${n}"><td class="nm">${n}</td>
+        <td class="val"><input type="text" spellcheck="false" aria-label="${n} value"><span class="res"></span></td>
+        <td class="smp">${sample(n)}</td>
+        <td class="rv"><button type="button" aria-label="Reset ${n}" title="Reset">↺</button></td></tr>`).join('')}</tbody></table></div>`).join('');
+    $('tokens').querySelectorAll('tr').forEach(tr => rows.set(tr.dataset.n, tr));
+  }
+
+  /* ---- apply edits to the root element ---- */
+  function applyEdits() {
+    applied.forEach(n => root.style.removeProperty(n)); applied.clear();
+    [edits.all, edits[theme]].forEach(set => Object.entries(set).forEach(([n, v]) => { root.style.setProperty(n, v); applied.add(n); }));
+  }
+  let probe;
+  function resolved(n, v) {
+    if (groupOf(n) === 'space') {
+      probe = probe || Object.assign(document.createElement('div'), {}); probe.style.cssText = 'position:absolute;visibility:hidden;height:0';
+      probe.style.width = `var(${n})`; document.body.appendChild(probe); const w = probe.getBoundingClientRect().width; probe.remove();
+      return w ? w + 'px' : '';
+    }
+    const c = getComputedStyle(root).getPropertyValue(n).trim();
+    return c && c !== v ? c : '';
+  }
+  function refresh() {
+    const active = document.activeElement;
+    let edited = 0;
+    tokens.forEach((t, n) => {
+      const tr = rows.get(n), input = tr.querySelector('input'), v = current(n, t);
+      if (input !== active) input.value = v;
+      const e = isEdited(n); tr.classList.toggle('edited', e); if (e) edited++;
+      const r = resolved(n, v); tr.querySelector('.res').textContent = r && r !== v ? '= ' + r : '';
+    });
+    $('count').textContent = `${tokens.size} tokens · ${edited} edited${edited ? '' : ''}`;
+    $('css').textContent = cssOut() || 'No edits yet. Change a value in the table.';
+  }
+  function cssOut() {
+    const block = (sel, obj) => { const k = Object.keys(obj); return k.length ? `${sel} {\n${k.map(n => `  ${n}: ${obj[n]};`).join('\n')}\n}\n` : ''; };
+    return [block(':root', { ...edits.all, ...edits.light }), block(':root[data-theme="dark"]', edits.dark)].filter(Boolean).join('\n');
+  }
+
+  /* ---- events ---- */
+  $('tokens').addEventListener('input', e => {
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const n = tr.dataset.n, t = tokens.get(n), val = e.target.value.trim(), sc = scopeOf(n);
+    if (!val || val === authored(n, t)) delete edits[sc][n]; else edits[sc][n] = val;
+    applyEdits(); refresh();
+  });
+  $('tokens').addEventListener('click', e => {
+    const b = e.target.closest('td.rv button'); if (!b) return;
+    const n = b.closest('tr').dataset.n; delete edits[scopeOf(n)][n]; applyEdits(); refresh();
+  });
+  document.querySelectorAll('input[name=theme]').forEach(r => r.addEventListener('change', () => {
+    if (!r.checked) return; theme = r.value; root.setAttribute('data-theme', theme); applyEdits(); refresh();
+  }));
+  $('resetAll').addEventListener('click', () => { edits.all = {}; edits.light = {}; edits.dark = {}; applyEdits(); refresh(); toast('All edits cleared'); });
+  let tt = 0;
+  function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2000); }
+  $('copy').addEventListener('click', async () => {
+    const css = cssOut(); if (!css) { toast('No edits yet'); return; }
+    try { await navigator.clipboard.writeText(css); toast('Edited tokens copied'); }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = css; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('Edited tokens copied'); } catch (e2) { toast('Copy failed. Select the text in the box and copy it.'); }
+      ta.remove();
+    }
+  });
+
+  function init() {
+    tokens.clear(); rows.clear(); edits.all = {}; edits.light = {}; edits.dark = {}; applyEdits(); $('error').hidden = true;
+    try { applyMainTheme(); readSheet(); build(); root.setAttribute('data-theme', theme); refresh(); }
+    catch (e) { const b = $('error'); b.textContent = e.message; b.hidden = false; }
+  }
+  document.querySelectorAll('input[name=source]').forEach(r => r.addEventListener('change', () => { if (r.checked) { source = r.value; init(); toast('Switched source. Edits cleared'); } }));
+  if (document.readyState === 'complete') init(); else window.addEventListener('load', init);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color Playground</title>
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --ink: #1B1B22;
+    --muted: #62626E;
+    --line: #E1E0D8;
+    --focus: #1E4F94;
+    --ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--ui); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  header.page { padding: 32px 0 16px; }
+  header.page h1 { margin: 0; font-size: 28px; line-height: 1.15; }
+  header.page p { margin: 6px 0 0; color: var(--muted); }
+
+  .controls { background: #F1F0EA; border-block: 1px solid var(--line); }
+  .controls .wrap { display: flex; gap: 24px; flex-wrap: wrap; align-items: end; padding-block: 16px; }
+  .field { display: grid; gap: 6px; }
+  .field label { font-weight: 600; font-size: 14px; }
+  .pick { display: flex; gap: 8px; align-items: center; }
+  input[type=color] { width: 56px; height: 40px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
+  input[type=text], select { height: 40px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 10px; font: inherit; color: inherit; }
+  input[type=text] { width: 110px; font-family: var(--mono); text-transform: uppercase; }
+  input[type=text].bad { border-color: #B3261E; }
+  select { min-width: 220px; }
+
+  section.block { padding: 28px 0 4px; }
+  h2 { margin: 0 0 4px; font-size: 13px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .ramp { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; }
+  .sets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+  .small { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+
+  .sw { display: grid; gap: 6px; min-width: 0; }
+  .chip { height: 84px; border-radius: 10px; border: 1px solid rgba(0,0,0,.12); display: flex; align-items: flex-end; padding: 8px 10px; font-weight: 600; font-size: 13px; }
+  .small .chip { height: 52px; padding: 4px 6px; font-size: 11px; }
+  .ramp .chip { height: 96px; padding: 6px 8px; }
+  .sw .name { font-weight: 600; font-size: 14px; }
+  .small .sw .name, .ramp .sw .name { font-size: 12px; }
+  .sw .hex { font-family: var(--mono); font-size: 13px; text-transform: uppercase; color: var(--ink); background: none; border: 0; padding: 0; text-align: left; cursor: copy; }
+  .small .sw .hex, .ramp .sw .hex { font-size: 11px; }
+  .sw .hex:hover { text-decoration: underline; }
+  .sw.base .chip { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
+
+  .set h3 { margin: 0 0 2px; font-size: 15px; }
+  .set p { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+
+  /* ---------- semantic roles ---------- */
+  .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px 20px; margin: 0 0 20px; }
+  .role { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; }
+  .role input[type=color] { grid-row: span 2; width: 44px; height: 40px; }
+  .role label { font-weight: 600; font-size: 13px; }
+  .role code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .role input[type=text] { width: 100%; height: 32px; font-size: 13px; }
+  .role .names { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+  .role .choice { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .role .choice[hidden] { display: none; }
+  .role .choice button { font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  .groupH { grid-column: 1 / -1; font-size: 13px; font-weight: 700; margin: 6px 0 -4px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+  .seg label { cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg span { display: block; padding: 8px 22px; font-weight: 600; font-size: 14px; }
+  .seg input:checked + span { background: var(--ink); color: #fff; }
+  .seg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: -3px; }
+
+  .previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+  .pvw { margin: 0; min-width: 0; border-radius: 16px; padding: 6px; border: 2px solid transparent; }
+  .pvw.sel { border-color: var(--ink); }
+  .pvw figcaption { font-weight: 700; font-size: 13px; padding: 2px 8px 6px; }
+  .ui { background: var(--color-background); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 12px; padding: 20px; display: grid; gap: 18px; }
+  .ui .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .ui .btn { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+  .ui .btn.primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+  .ui .btn.secondary { background: transparent; color: var(--color-secondary); border-color: var(--color-secondary); }
+  .ui .btn.secondary-fill { background: var(--color-secondary); color: var(--color-on-primary); border-color: var(--color-secondary); }
+  .ui .btn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+  .ui .field-demo { display: grid; gap: 6px; max-width: 320px; }
+  .ui .field-demo span { font-weight: 600; font-size: 14px; color: var(--color-text); }
+  .ui .field-demo input { font: inherit; padding: 9px 12px; border-radius: 8px; background: var(--color-surface); color: var(--color-text); border: 1.5px solid var(--color-border-strong); height: auto; width: 100%; text-transform: none; }
+  .ui .field-demo input::placeholder { color: var(--color-muted); opacity: 1; }
+  .ui .field-demo input:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 1px; }
+  /* Raised = a lighter surface, never a drop shadow. */
+  .ui .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 16px 18px; border-top: 4px solid var(--color-accent); }
+  .ui .card h3 { margin: 0 0 6px; font-size: 20px; color: var(--color-text); }
+  .ui .card p { margin: 0; color: var(--color-muted); }
+  .ui .card .tip { margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--color-surface) 90%, var(--color-text)); color: var(--color-text); font-size: 14px; }
+  .ui .alerts { display: grid; gap: 10px; }
+  .ui .alert { --c: var(--color-info); background: color-mix(in srgb, var(--c) 12%, var(--color-surface)); border: 1px solid color-mix(in srgb, var(--c) 45%, var(--color-surface)); border-left: 5px solid var(--c); border-radius: 8px; padding: 10px 14px; color: var(--color-text); }
+  .ui .alert strong { color: var(--c); }
+  .ui .alert.success { --c: var(--color-success); }
+  .ui .alert.warning { --c: var(--color-warning); }
+  .ui .alert.error { --c: var(--color-error); }
+  .ui .alert.info { --c: var(--color-info); }
+  @media (max-width: 900px) { .previews { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- contrast checker ---------- */
+  .tw { overflow-x: auto; }
+  table.ct { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  table.ct th, table.ct td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.ct th { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  table.ct .pair { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  table.ct .pchip { width: 44px; height: 30px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15); display: grid; place-items: center; font-weight: 700; font-size: 15px; flex: none; }
+  table.ct .ratio { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-weight: 700; font-size: 12px; }
+  .badge.aaa { background: #D6F0DF; color: #0B5A2B; }
+  .badge.aa { background: #E3EEFB; color: #174A8B; }
+  .badge.fail { background: #B3261E; color: #fff; }
+  .badge.ok { background: #D6F0DF; color: #0B5A2B; }
+  h3.ch { margin: 22px 0 6px; font-size: 15px; }
+
+  footer { padding: 28px 0 56px; color: var(--muted); font-size: 13px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 16px); background: var(--ink); color: #fff; padding: 8px 14px; border-radius: 8px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; font-weight: 600; font-size: 14px; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 860px) {
+    .ramp { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .sets { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .controls .wrap { display: grid; }
+    select { min-width: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page"><div class="wrap">
+  <nav aria-label="Pages" style="font-size:14px;margin-bottom:8px"><a href="index.html">← Design system</a> · <a href="type-playground.html">Type playground</a></nav>
+  <h1>Color playground</h1>
+  <p>Pick a base color and a harmony. Everything below updates as you change them. Click any hex code to copy it.</p>
+</div></header>
+
+<section class="controls" aria-label="Color controls"><div class="wrap">
+  <div class="field">
+    <label for="color">Base color</label>
+    <div class="pick">
+      <input type="color" id="color" value="#4f46e5">
+      <input type="text" id="hex" value="#4F46E5" maxlength="7" spellcheck="false" aria-label="Base color hex code">
+    </div>
+  </div>
+  <div class="field">
+    <label for="harmony">Harmony</label>
+    <select id="harmony">
+      <option value="complementary">Complementary</option>
+      <option value="analogous">Analogous</option>
+      <option value="triadic">Triadic</option>
+      <option value="split">Split complementary</option>
+    </select>
+  </div>
+</div></section>
+
+<main class="wrap">
+  <section class="block" aria-labelledby="hH">
+    <h2 id="hH">Harmony</h2>
+    <p class="sub" id="hSub"></p>
+    <div class="swatches" id="harmonyOut" aria-live="polite"></div>
+  </section>
+
+  <section class="block" aria-labelledby="rH">
+    <h2 id="rH">Tonal ramp</h2>
+    <p class="sub">Ten steps from the base. 500 is the base itself; steps below mix toward white, steps above mix toward black.</p>
+    <div class="ramp" id="rampOut"></div>
+  </section>
+
+  <section class="block" aria-labelledby="sH">
+    <h2 id="sH">Tints, shades and tones</h2>
+    <p class="sub">Small sets mixed from the base. The percentage is how much of the other color is mixed in.</p>
+    <div class="sets">
+      <div class="set"><h3>Tints</h3><p>Toward white</p><div class="small" id="tintOut"></div></div>
+      <div class="set"><h3>Shades</h3><p>Toward black</p><div class="small" id="shadeOut"></div></div>
+      <div class="set"><h3>Tones</h3><p>Toward gray (#808080)</p><div class="small" id="toneOut"></div></div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="roH">
+    <h2 id="roH">Semantic roles</h2>
+    <p class="sub">Each role is a CSS custom property (<code>--color-primary</code> and so on). Light and Dark are two separate palettes, not one inverted. The toggle chooses which palette the inputs below edit and the contrast checker tests. Both sample interfaces are always shown.</p>
+    <div class="seg" role="radiogroup" aria-label="Palette to edit">
+      <label><input type="radio" name="mode" value="light" checked><span>Light</span></label>
+      <label><input type="radio" name="mode" value="dark"><span>Dark</span></label>
+    </div>
+    <p class="sub" style="margin-top:10px">Editing the <strong id="editing">light</strong> palette.</p>
+    <div class="roles" id="roleIn"></div>
+    <div class="previews" id="previews"></div>
+  </section>
+
+  <section class="block" aria-labelledby="ctH">
+    <h2 id="ctH">Contrast checker: <span id="ctMode">Light mode</span></h2>
+    <p class="sub">WCAG contrast ratio for every text pair used in the sample interface, for the mode selected above. Normal text needs 4.5:1 for AA and 7:1 for AAA. Large text (24px regular or 19px bold) needs 3:1 for AA and 4.5:1 for AAA. Ratios are rounded down, so a 4.49 never shows as 4.5. Updates live with the role colors.</p>
+    <div class="tw"><table class="ct">
+      <thead><tr><th scope="col">Pair</th><th scope="col">Ratio</th><th scope="col">Normal text</th><th scope="col">Large text</th></tr></thead>
+      <tbody id="ctRows"></tbody>
+    </table></div>
+    <h3 class="ch">User interface parts</h3>
+    <p class="sub">Borders and filled controls need 3:1 against what they sit on.</p>
+    <div class="tw"><table class="ct">
+      <thead><tr><th scope="col">Pair</th><th scope="col">Ratio</th><th scope="col">Needs 3:1</th></tr></thead>
+      <tbody id="uiRows"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<footer><div class="wrap">Hue rotation is done in HSL, keeping saturation and lightness. Mixing is a straight blend in sRGB.</div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  /* ---------- color maths ---------- */
+  const hexOk = h => /^#[0-9a-f]{6}$/i.test(h);
+  const toRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const toHex = rgb => '#' + rgb.map(v => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('').toUpperCase();
+
+  function rgbToHsl([r, g, b]) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    const l = (max + min) / 2;
+    let h = 0, s = 0;
+    if (d) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (max === r) h = ((g - b) / d) % 6;
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h *= 60; if (h < 0) h += 360;
+    }
+    return [h, s, l];
+  }
+  function hslToRgb([h, s, l]) {
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+    const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+  }
+  const rotate = (hex, deg) => { const [h, s, l] = rgbToHsl(toRgb(hex)); return toHex(hslToRgb([((h + deg) % 360 + 360) % 360, s, l])); };
+
+  // t = 0 returns the base exactly; t = 1 returns the target.
+  const mix = (hex, target, t) => { const a = toRgb(hex), b = toRgb(target); return toHex(a.map((v, i) => v + (b[i] - v) * t)); };
+  const lum = hex => toRgb(hex).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }).reduce((s, v, i) => s + v * [.2126, .7152, .0722][i], 0);
+  const textOn = hex => (lum(hex) > .36 ? '#111111' : '#FFFFFF');
+
+  /* ---------- definitions ---------- */
+  const HARMONIES = {
+    complementary: { name: 'Complementary', steps: [['Complementary', 180]] },
+    analogous:     { name: 'Analogous',     steps: [['Analogous −30°', -30], ['Analogous +30°', 30]] },
+    triadic:       { name: 'Triadic',       steps: [['Triadic +120°', 120], ['Triadic +240°', 240]] },
+    split:         { name: 'Split complementary', steps: [['Split +150°', 150], ['Split +210°', 210]] },
+  };
+  // Share of white (below 500) or black (above 500) mixed in. 500 is 0, so it is exactly the base.
+  const RAMP = [[50, 'white', .92], [100, 'white', .8], [200, 'white', .6], [300, 'white', .4], [400, 'white', .2],
+                [500, null, 0],
+                [600, 'black', .2], [700, 'black', .4], [800, 'black', .6], [900, 'black', .8]];
+  const AMOUNTS = [.15, .3, .45, .6, .75];
+
+  /* ---------- rendering ---------- */
+  const swatch = (name, hex, cls = '') =>
+    `<div class="sw ${cls}"><div class="chip" style="background:${hex};color:${textOn(hex)}">${cls === 'base' ? 'Base' : ''}</div>` +
+    `<span class="name">${name}</span><button type="button" class="hex" data-hex="${hex}" title="Copy ${hex}">${hex}</button></div>`;
+
+  function render(base) {
+    base = base.toUpperCase();
+    const key = $('harmony').value, h = HARMONIES[key];
+
+    let items = h.steps.map(([label, deg]) => ({ label, hex: rotate(base, deg) }));
+    let html = '';
+    if (key === 'analogous') {
+      html = swatch(items[0].label, items[0].hex) + swatch('Base', base, 'base') + swatch(items[1].label, items[1].hex);
+    } else {
+      html = swatch('Base', base, 'base') + items.map(i => swatch(i.label, i.hex)).join('');
+    }
+    $('harmonyOut').innerHTML = html;
+    $('hSub').textContent = h.name + ': ' + h.steps.map(([, d]) => (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d) + '°').join(' and ') + ' around the color wheel.';
+
+    $('rampOut').innerHTML = RAMP.map(([n, to, t]) => {
+      const hex = to ? mix(base, to === 'white' ? '#FFFFFF' : '#000000', t) : base;
+      return swatch(String(n), hex, n === 500 ? 'base' : '');
+    }).join('');
+
+    const set = (target, id) => { $(id).innerHTML = AMOUNTS.map(t => swatch(Math.round(t * 100) + '%', mix(base, target, t))).join(''); };
+    set('#FFFFFF', 'tintOut'); set('#000000', 'shadeOut'); set('#808080', 'toneOut');
+  }
+
+  /* ---------- controls ---------- */
+  const picker = $('color'), hexIn = $('hex');
+  const current = () => picker.value.toUpperCase();
+  picker.addEventListener('input', () => { hexIn.value = current(); hexIn.classList.remove('bad'); render(current()); });
+  hexIn.addEventListener('input', () => {
+    let v = hexIn.value.trim(); if (v && v[0] !== '#') v = '#' + v;
+    if (hexOk(v)) { picker.value = v.toLowerCase(); hexIn.classList.remove('bad'); render(v); } else hexIn.classList.add('bad');
+  });
+  $('harmony').addEventListener('change', () => render(current()));
+
+  let tt = 0;
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-hex]'); if (!b) return;
+    const t = $('toast');
+    try { await navigator.clipboard.writeText(b.dataset.hex); t.textContent = 'Copied ' + b.dataset.hex; }
+    catch (err) { t.textContent = b.dataset.hex + ' (select and copy)'; }
+    t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 1600);
+  });
+
+  render(current());
+
+  /* ---------- semantic roles: two separate palettes ---------- */
+  const ROLES = [
+    ['Brand', [['primary', 'Primary'], ['secondary', 'Secondary'], ['accent', 'Accent'], ['on-primary', 'Label on primary and secondary']]],
+    ['Neutrals', [['background', 'Background'], ['surface', 'Surface (raised things)'], ['text', 'Text'],
+                  ['muted', 'Muted text'], ['border', 'Border'], ['border-strong', 'Border strong']]],
+    ['Feedback', [['success', 'Success'], ['warning', 'Warning'], ['error', 'Error'], ['info', 'Info']]],
+  ];
+  // Dark is its own palette: lifted, softened brand and feedback colors, dark gray ground, off-white text.
+  const PAL = {
+    light: { primary: '#4f46e5', secondary: '#9f46e5', accent: '#f59e0b', 'on-primary': '#ffffff',
+             background: '#f8fafc', surface: '#ffffff', text: '#0f172a', muted: '#64748b', border: '#e2e8f0', 'border-strong': '#7c8aa0',
+             success: '#198754', warning: '#b45309', error: '#c92a2a', info: '#2563eb' },
+    dark:  { primary: '#8b85f0', secondary: '#c084f0', accent: '#f59e0b', 'on-primary': '#0f1117',
+             background: '#0f1117', surface: '#1a1d24', text: '#e6e8ec', muted: '#9aa4b2', border: '#2c313c', 'border-strong': '#6b7688',
+             success: '#4cc38a', warning: '#f2b84b', error: '#f87171', info: '#60a5fa' },
+  };
+  let mode = 'light';
+  const MODE_NAME = { light: 'Light', dark: 'Dark' };
+
+  const PREVIEW = `
+    <div class="row">
+      <button type="button" class="btn primary">Primary action</button>
+      <button type="button" class="btn secondary">Secondary outlined</button>
+      <button type="button" class="btn secondary-fill">Secondary filled</button>
+    </div>
+    <label class="field-demo"><span>Your name</span><input type="text" placeholder="Ana Silva"></label>
+    <div class="card">
+      <h3>Lesson 4: Ordering at a café</h3>
+      <p>Practise the phrases you will need to order a coffee and a pastel de nata, and to ask for the bill.</p>
+      <div class="tip">Raised: a lighter surface, no shadow.</div>
+    </div>
+    <div class="alerts">
+      <div class="alert success"><strong>Success.</strong> Your answers were saved.</div>
+      <div class="alert warning"><strong>Warning.</strong> You have 5 minutes left in this exercise.</div>
+      <div class="alert error"><strong>Error.</strong> We could not check your answer. Try again.</div>
+      <div class="alert info"><strong>Info.</strong> A new reading text is available at level A2.</div>
+    </div>`;
+  $('previews').innerHTML = ['light', 'dark'].map(m =>
+    `<figure class="pvw" id="pw-${m}"><figcaption>${MODE_NAME[m]} mode</figcaption><div class="ui" id="ui-${m}" style="color-scheme:${m}">${PREVIEW}</div></figure>`).join('');
+
+  function applyVars(m) {
+    const el = $('ui-' + m);
+    for (const id in PAL[m]) el.style.setProperty('--color-' + id, PAL[m][id]);
+  }
+  applyVars('light'); applyVars('dark');
+
+  function setRole(id, hex) {
+    PAL[mode][id] = hex.toLowerCase();
+    applyVars(mode);
+    renderContrast();
+  }
+
+  /* ---------- contrast checker (runs on the mode being shown) ---------- */
+  const ratioOf = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const fmt = r => (Math.floor(r * 100) / 100).toFixed(2) + ':1';
+  const grade = (r, aa, aaa) => r >= aaa ? ['aaa', 'AAA'] : r >= aa ? ['aa', 'AA'] : ['fail', 'Fail'];
+  const badge = ([c, t]) => `<span class="badge ${c}">${c === 'fail' ? '✕ ' : '✓ '}${t}</span>`;
+  const textPairs = () => [
+    ['Text on background', 'text', 'background'], ['Text on surface', 'text', 'surface'], ['Muted on surface', 'muted', 'surface'],
+    ['Label on primary', 'on-primary', 'primary'], ['Label on secondary', 'on-primary', 'secondary'],
+    mode === 'dark' ? ['Label on accent', 'on-primary', 'accent'] : ['Text on accent', 'text', 'accent'],
+    ['Label on success', 'on-primary', 'success'], ['Label on warning', 'on-primary', 'warning'], ['Label on error', 'on-primary', 'error'], ['Label on info', 'on-primary', 'info'],
+  ];
+  const UI_PAIRS = [['Border against surface (decorative)', 'border', 'surface'], ['Border strong against surface (input)', 'border-strong', 'surface'], ['Primary against background', 'primary', 'background']];
+  function renderContrast() {
+    const P = PAL[mode];
+    $('ctMode').textContent = MODE_NAME[mode] + ' mode';
+    $('ctRows').innerHTML = textPairs().map(([name, f, b]) => {
+      const fg = P[f], bg = P[b], r = ratioOf(fg, bg);
+      return `<tr><th scope="row" class="pair"><span class="pchip" style="background:${bg};color:${fg}" aria-hidden="true">Aa</span>${name}</th>` +
+        `<td class="ratio">${fmt(r)}</td><td>${badge(grade(r, 4.5, 7))}</td><td>${badge(grade(r, 3, 4.5))}</td></tr>`;
+    }).join('');
+    $('uiRows').innerHTML = UI_PAIRS.map(([name, f, b]) => {
+      const fg = P[f], bg = P[b], r = ratioOf(fg, bg), ok = r >= 3;
+      return `<tr><th scope="row" class="pair"><span class="pchip" style="background:${bg};border:3px solid ${fg}" aria-hidden="true"></span>${name}</th>` +
+        `<td class="ratio">${fmt(r)}</td><td>${ok ? '<span class="badge ok">✓ Pass</span>' : '<span class="badge fail">✕ Fail, below 3:1</span>'}</td></tr>`;
+    }).join('');
+  }
+
+  /* ---------- role inputs and the Light / Dark toggle ---------- */
+  $('roleIn').innerHTML = ROLES.map(([g, list]) => `<div class="groupH">${g}</div>` + list.map(([id, label]) =>
+    `<div class="role"><input type="color" id="rc-${id}" aria-label="${label} color">` +
+    `<div class="names"><label for="rh-${id}">${label}</label><code>--color-${id}</code></div>` +
+    `<input type="text" id="rh-${id}" maxlength="7" spellcheck="false" aria-label="${label} hex code">` +
+    (id === 'on-primary' ? `<div class="choice" id="labelChoice" hidden><span>Dark mode label:</span>` +
+      `<button type="button" data-label="dark">Dark</button><button type="button" data-label="white">White</button></div>` : '') +
+    `</div>`).join('')).join('');
+
+  function syncInputs() {
+    for (const id in PAL[mode]) {
+      $('rc-' + id).value = PAL[mode][id];
+      $('rh-' + id).value = PAL[mode][id].toUpperCase();
+      $('rh-' + id).classList.remove('bad');
+    }
+    $('labelChoice').hidden = mode !== 'dark';
+    $('editing').textContent = MODE_NAME[mode].toLowerCase();
+    ['light', 'dark'].forEach(m => $('pw-' + m).classList.toggle('sel', m === mode));
+    renderContrast();
+  }
+  document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', () => { if (r.checked) { mode = r.value; syncInputs(); } }));
+  $('labelChoice').addEventListener('click', e => {
+    const b = e.target.closest('[data-label]'); if (!b) return;
+    const v = b.dataset.label === 'white' ? '#ffffff' : PAL.dark.background;
+    setRole('on-primary', v); syncInputs();
+  });
+  $('roleIn').addEventListener('input', e => {
+    const m = /^(rc|rh)-([\w-]+)$/.exec(e.target.id); if (!m) return;
+    const id = m[2];
+    if (m[1] === 'rc') { $('rh-' + id).value = e.target.value.toUpperCase(); $('rh-' + id).classList.remove('bad'); setRole(id, e.target.value); }
+    else {
+      let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v;
+      if (hexOk(v)) { $('rc-' + id).value = v.toLowerCase(); e.target.classList.remove('bad'); setRole(id, v); } else e.target.classList.add('bad');
+    }
+  });
+  syncInputs();
+})();
+</script>
+</body>
+</html>

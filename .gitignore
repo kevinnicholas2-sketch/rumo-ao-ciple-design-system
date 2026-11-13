@@ -1,0 +1,5 @@
+# local tooling and private notes: not part of the published site
+.agents/
+.claude/
+skills-lock.json
+design-system-brief.md

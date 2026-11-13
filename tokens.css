@@ -1,0 +1,94 @@
+/* Rumo ao CIPLE design tokens: Azulejo. Written by the design system tool. Light is the default; dark overrides only what changes. */
+:root {
+  /* color */
+  --color-primary: #0F5C3A;
+  --color-primary-hover: #0C4A2E;
+  --color-on-primary: #FFFFFF;
+  --color-secondary: #1E4F94;
+  --color-accent: #E0B03A;
+  --color-on-accent: #111111;
+  --color-bg: #FBF6EA;
+  --color-surface: #F1EDE1;
+  --color-surface-raised: #F1EDE1;
+  --color-text: #1A2620;
+  --color-muted: #5E645D;
+  --color-border: #D7D5CA;
+  --color-border-strong: #797D75;
+  --color-focus: #1E4F94;
+  --color-success: #1B7F4B;
+  --color-warning: #B45309;
+  --color-error: #C4302B;
+  --color-info: #2563EB;
+
+  /* font */
+  --font-heading: 'Source Serif 4', Georgia, serif;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --type-base: 16px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 22px;
+  --font-size-xl: 32px;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;
+
+  /* line */
+  --line-height-body: 1.5;
+  --line-height-heading: 1.1;
+
+  /* space: every step is its number times the unit */
+  --space-unit: 4px;
+  --space-1: calc(1 * var(--space-unit));
+  --space-2: calc(2 * var(--space-unit));
+  --space-3: calc(3 * var(--space-unit));
+  --space-4: calc(4 * var(--space-unit));
+  --space-6: calc(6 * var(--space-unit));
+  --space-8: calc(8 * var(--space-unit));
+  --space-12: calc(12 * var(--space-unit));
+  --space-16: calc(16 * var(--space-unit));
+
+  /* radius */
+  --radius-none: 0;
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* border */
+  --border-width-default: 1px;
+  --border-width-emphasis: 2px;
+  --border-width-focus: 3px;
+
+  /* shadow (none in dark: elevation is a lighter surface) */
+  --shadow-sm: 0 1px 2px rgba(26, 38, 32, 0.12), 0 2px 4px rgba(26, 38, 32, 0.06);
+  --shadow-md: 0 2px 4px rgba(26, 38, 32, 0.1), 0 8px 16px rgba(26, 38, 32, 0.08);
+  --shadow-lg: 0 4px 8px rgba(26, 38, 32, 0.1), 0 16px 32px rgba(26, 38, 32, 0.12);
+}
+
+:root[data-theme="dark"] {
+  /* color */
+  --color-primary: #4FB387;
+  --color-primary-hover: #72C29F;
+  --color-on-primary: #0F1713;
+  --color-secondary: #7FA6DD;
+  --color-accent: #E6B94A;
+  --color-on-accent: #111111;
+  --color-bg: #0F1713;
+  --color-surface: #17221C;
+  --color-surface-raised: #252F2A;
+  --color-text: #ECE7D8;
+  --color-muted: #9DB0A5;
+  --color-border: #2B3A32;
+  --color-border-strong: #6B8176;
+  --color-focus: #7FA6DD;
+  --color-success: #5CCB92;
+  --color-warning: #F2B84B;
+  --color-error: #EF7B74;
+  --color-info: #6EA8F5;
+
+  /* shadow (none in dark: elevation is a lighter surface) */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+}

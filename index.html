@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rumo ao CIPLE Design System</title>
+<meta name="description" content="Set colour, type, spacing and shape once. See them on a study dashboard, a reading exercise, a social post and a printable worksheet, then export CSS variables or share a view-only link.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F5C3A'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23E0B03A' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23E0B03A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Literata:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#stage">Skip to previews</a>
+
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0F5C3A"/><circle cx="16" cy="16" r="8" fill="none" stroke="#E0B03A" stroke-width="2"/><circle cx="16" cy="16" r="2.5" fill="#E0B03A"/></svg>
+    <span class="brand-name">Rumo ao CIPLE</span>
+    <span class="brand-sub">Design system</span>
+  </div>
+  <div class="top-actions">
+    <span class="badge-view" id="viewBadge" hidden>View-only review</span>
+    <div class="seg" id="modeSeg" role="radiogroup" aria-label="Palette: Light or Dark">
+      <label><input type="radio" name="mode" value="light" checked><span>Light</span></label>
+      <label><input type="radio" name="mode" value="dark"><span>Dark</span></label>
+    </div>
+    <button class="btn ghost health" id="healthPill" type="button" aria-label="Health summary"><span class="hd" aria-hidden="true"></span><span class="hl">Health:</span> <span class="ht">checking…</span></button>
+    <div class="menu" id="toolsMenu">
+      <button class="btn ghost" id="toolsBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolsList">Playgrounds <span aria-hidden="true">&#9662;</span></button>
+      <ul class="menu-list" id="toolsList" hidden>
+        <li><a href="type-playground.html">Type playground</a></li>
+        <li><a href="color-playground.html">Color playground</a></li>
+        <li><a href="layout-playground.html">Layout playground</a></li>
+        <li><a href="shape-playground.html">Shape playground</a></li>
+        <li><a href="token-cascade.html">Token cascade</a></li>
+        <li><a href="share-playground.html">Share playground</a></li>
+      </ul>
+    </div>
+    <button class="btn ghost" id="btnReset" type="button">Reset</button>
+    <button class="btn" id="btnShare" type="button">Copy share link</button>
+    <button class="btn solid" id="btnEdit" type="button" hidden>Open a copy to edit</button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="panel" id="panel" aria-label="Design settings"></aside>
+
+  <main class="main" id="stage" tabindex="-1">
+    <div class="tabs" role="tablist" aria-label="Preview format">
+      <button role="tab" data-view="web" aria-selected="true">Web dashboard</button>
+      <button role="tab" data-view="mobile" aria-selected="false">Mobile reading</button>
+      <button role="tab" data-view="social" aria-selected="false">Social post</button>
+      <button role="tab" data-view="print" aria-selected="false">Printable worksheet</button>
+      <button role="tab" data-view="all" aria-selected="false">All four</button>
+      <button role="tab" data-view="ui" aria-selected="false">Sample UI</button>
+      <button role="tab" data-view="space" aria-selected="false">Spacing</button>
+      <button role="tab" data-view="grid" aria-selected="false">Column grid</button>
+      <button role="tab" data-view="resp" aria-selected="false">Responsive</button>
+      <button role="tab" data-view="checks" aria-selected="false">Layout checks <span id="ckBadge" class="cbadge" hidden></span></button>
+      <button role="tab" data-view="compare" aria-selected="false">Compare</button>
+      <button role="tab" data-view="css" aria-selected="false" class="tab-css">CSS variables</button>
+      <button type="button" id="btnGrid" class="tab-grid" aria-pressed="false" title="Show the column grid over the previews">Grid overlay</button>
+    </div>
+
+    <!-- WEB DASHBOARD -->
+    <section class="view on" id="view-web" role="tabpanel">
+      <div class="slot"><div class="fit" data-name="Web study dashboard" data-w="960"><div class="frame pv pv-web" lang="pt-PT">
+        <aside class="w-side">
+          <div class="w-logo"><span class="w-dot"></span>Rumo ao CIPLE</div>
+          <nav class="w-nav">
+            <span class="on">Início</span><span>Leitura</span><span>Escrita</span><span>Compreensão oral</span><span>Expressão oral</span><span>Simulacros</span>
+          </nav>
+        </aside>
+        <div class="w-main">
+          <div class="tile-strip"></div>
+          <div class="w-head">
+            <div>
+              <h1>Bom dia, Marta</h1>
+              <p class="muted">Continue de onde ficou. Hoje tem uma sessão de leitura.</p>
+            </div>
+            <div class="w-count"><strong>42</strong><span>dias para o exame</span></div>
+          </div>
+          <div class="w-skills">
+            <div class="card skill"><div class="s-top"><i class="d d1"></i><h3>Leitura</h3><b>72%</b></div><div class="bar"><u style="width:72%"></u></div><p class="muted sm">18 de 25 textos</p></div>
+            <div class="card skill"><div class="s-top"><i class="d d2"></i><h3>Escrita</h3><b>48%</b></div><div class="bar"><u style="width:48%"></u></div><p class="muted sm">12 de 25 exercícios</p></div>
+            <div class="card skill"><div class="s-top"><i class="d d3"></i><h3>Compreensão oral</h3><b>61%</b></div><div class="bar"><u style="width:61%"></u></div><p class="muted sm">15 de 25 áudios</p></div>
+            <div class="card skill"><div class="s-top"><i class="d d4"></i><h3>Expressão oral</h3><b>35%</b></div><div class="bar"><u style="width:35%"></u></div><p class="muted sm">9 de 25 gravações</p></div>
+          </div>
+          <div class="w-row">
+            <div class="card next">
+              <p class="eyebrow">Próxima sessão</p>
+              <h2>Leitura: na pastelaria</h2>
+              <p class="muted">Um texto curto e três perguntas. Cerca de 10 minutos.</p>
+              <div class="btns"><span class="pv-btn">Continuar leitura</span><span class="pv-btn alt">Ver plano</span></div>
+            </div>
+            <div class="card week">
+              <p class="eyebrow">Esta semana</p>
+              <div class="days"><span class="x">S</span><span class="x">T</span><span class="x">Q</span><span class="x">Q</span><span class="x">S</span><span>S</span><span>D</span></div>
+              <p class="muted sm">5 dias seguidos. Falta um para a meta.</p>
+            </div>
+          </div>
+        </div>
+      </div></div></div>
+    </section>
+
+    <!-- MOBILE READING -->
+    <section class="view" id="view-mobile" role="tabpanel">
+      <div class="slot"><div class="fit" data-name="Mobile reading exercise" data-w="360"><div class="frame pv pv-mobile" lang="pt-PT">
+        <div class="m-bar"><span class="m-back" aria-hidden="true">&larr;</span><b>Leitura</b><span class="muted">3 de 8</span></div>
+        <div class="m-progress"><u style="width:37.5%"></u></div>
+        <div class="m-body">
+          <p class="eyebrow">Texto · Nível A2</p>
+          <h2>Na pastelaria</h2>
+          <p class="m-text">Hoje é sábado. A Ana vai à pastelaria da rua das Flores com o irmão. Eles comem dois pastéis de nata e bebem um galão. Depois, vão ao mercado comprar fruta.</p>
+          <div class="m-q">
+            <h3>O que fazem a Ana e o irmão depois da pastelaria?</h3>
+            <div class="opt on"><i></i>Vão ao mercado.</div>
+            <div class="opt"><i></i>Vão para casa.</div>
+            <div class="opt"><i></i>Vão ao cinema.</div>
+          </div>
+        </div>
+        <div class="m-foot"><span class="pv-btn block">Verificar resposta</span></div>
+      </div></div></div>
+    </section>
+
+    <!-- SOCIAL POST -->
+    <section class="view" id="view-social" role="tabpanel">
+      <div class="slot"><div class="fit" data-name="Social vocabulary post" data-w="540"><div class="frame pv pv-social" lang="pt-PT">
+        <div class="s-body">
+          <p class="s-tag">Vocabulário CIPLE · À mesa</p>
+          <h1>o pão</h1>
+          <p class="s-tr">bread</p>
+          <div class="s-ex"><p>Quero um pão, por favor.</p><small>I would like some bread, please.</small></div>
+        </div>
+        <div class="s-foot"><span>Rumo ao CIPLE</span><span>Português europeu · A2</span></div>
+        <div class="s-tiles"></div>
+      </div></div></div>
+    </section>
+
+    <!-- PRINT WORKSHEET -->
+    <section class="view" id="view-print" role="tabpanel">
+      <div class="print-wrap">
+        <div class="slot"><div class="fit" data-name="Printable CIPLE worksheet" data-w="794"><div class="frame pv pv-print" lang="pt-PT">
+          <div class="p-tiles"></div>
+          <div class="p-sheet">
+            <p class="eyebrow">Rumo ao CIPLE · Leitura · Nível A2</p>
+            <h1>Ficha de prática 03</h1>
+            <div class="p-meta"><span>Nome</span><span>Data</span></div>
+
+            <div class="ex">
+              <h2><i>1</i>Leia o texto.</h2>
+              <p>O Rui mora em Coimbra. Todos os dias, acorda às sete horas e toma o pequeno-almoço com a mãe. Depois, apanha o autocarro para a universidade.</p>
+              <p class="q"><b>A que horas acorda o Rui?</b></p>
+              <ul class="checks"><li>Às sete horas.</li><li>Às oito horas.</li><li>Às nove horas.</li></ul>
+            </div>
+
+            <div class="ex">
+              <h2><i>2</i>Complete com <em>ser</em> ou <em>estar</em>.</h2>
+              <ol class="fill">
+                <li>Eu <u></u> de Lisboa.</li>
+                <li>O café <u></u> quente.</li>
+                <li>Nós <u></u> estudantes.</li>
+              </ol>
+            </div>
+
+            <div class="ex">
+              <h2><i>3</i>Escreva três frases sobre o seu dia.</h2>
+              <div class="rule"></div><div class="rule"></div><div class="rule"></div>
+            </div>
+          </div>
+          <div class="p-foot"><span>Rumo ao CIPLE · Ficha 03</span><span>Página 1 de 1</span></div>
+        </div></div></div>
+
+        <aside class="specs" aria-label="Print specification">
+          <div class="specs-head">
+            <h2>Print specification</h2>
+            <button class="btn solid" id="btnPrint" type="button">Print worksheet</button>
+          </div>
+          <p class="note">Exact values behind this worksheet. Sizes are in pt for print (A4, 1 pt = 1.333 px on screen).</p>
+          <div id="specType"></div>
+          <div id="specColor"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ALL FOUR -->
+    <section class="view" id="view-all" role="tabpanel">
+      <div class="all-grid" id="allGrid"></div>
+    </section>
+
+    <!-- SAMPLE UI (role colors only, both palettes) -->
+    <section class="view" id="view-ui" role="tabpanel">
+      <p class="note">An interface built only from the color roles. Light and Dark are separate palettes, shown together. The outlined one is the palette you are editing.</p>
+      <div class="previews" id="uiBoth"></div>
+    </section>
+
+    <!-- SPACING (named scale, sample cards) -->
+    <section class="view" id="view-space" role="tabpanel">
+      <div class="spl-head">
+        <p class="note">Card padding, the gaps between parts and the gap between cards use only the space names. Change the base unit in the left panel and everything resizes together.</p>
+        <label><input type="checkbox" id="splGuides" checked> Show spacing guides</label>
+      </div>
+      <p class="spl-legend" aria-hidden="true"><span><i style="background:#DCE8FB"></i>Card padding</span><span><i style="background:#F9D9D2"></i>Gap</span></p>
+      <div class="spl-stage spl-on" id="splStage"><div class="spl-cards" id="splCards"></div></div>
+    </section>
+
+    <!-- COLUMN GRID -->
+    <section class="view" id="view-grid" role="tabpanel">
+      <p class="note">Columns, gutter and margin come from the Layout grid section in the left panel. Gutter and margin use the space names. Red bands are columns, hatched blue is the margin.</p>
+      <div class="lg-stage" id="lgStage">
+        <div class="lg-wrap">
+          <div class="lg-mg l"></div><div class="lg-mg r"></div>
+          <div class="lg-bands" id="lgBands" aria-hidden="true"></div>
+          <div id="lgRows"></div>
+        </div>
+      </div>
+      <p class="lg-read" id="lgRead"></p>
+    </section>
+
+    <!-- RESPONSIVE STRATEGIES -->
+    <section class="view" id="view-resp" role="tabpanel">
+      <p class="note">Drag the right edge of the frame (or focus it and use the arrow keys) from 240 to 900 px. Fluid keeps one arrangement and the cards flex. Adaptive uses fixed 160 px cards that jump at your breakpoints. Combination flexes within a breakpoint and reflows between them. Set the mode and breakpoints in the left panel.</p>
+      <div class="lay-rstage" id="rstage">
+        <div class="lay-ruler" id="rRuler" aria-hidden="true"></div>
+        <div class="lay-frame" id="rframe" style="width:640px">
+          <div class="lay-rcards" id="rcards" hidden></div>
+          <div class="lay-real" id="rreal"></div>
+          <div class="lay-handle" id="rhandle" role="slider" tabindex="0" aria-label="Frame width" aria-valuemin="240" aria-valuemax="900" aria-valuenow="640"></div>
+        </div>
+        <p class="lay-info"><span id="rW"></span><span id="rC"></span><span id="rR"></span></p>
+      </div>
+    </section>
+
+    <!-- COMPARE -->
+    <section class="view" id="view-compare" role="tabpanel">
+      <p class="note" id="cmpNote"></p>
+      <div class="cmp-ctl">
+        <div class="field"><label for="cmpA">Left</label><select id="cmpA"></select></div>
+        <button type="button" class="btn" id="cmpSwap" aria-label="Swap left and right">⇄ Swap</button>
+        <div class="field"><label for="cmpB">Right</label><select id="cmpB"></select></div>
+        <div class="seg" role="radiogroup" aria-label="Screen to compare"><label><input type="radio" name="cmpscreen" value="web" checked><span>Dashboard</span></label><label><input type="radio" name="cmpscreen" value="mobile"><span>Reading</span></label></div>
+      </div>
+      <div class="cmp-grid">
+        <article class="cmp-side" id="cmp-a" aria-labelledby="cmp-a-h">
+          <header><h3 id="cmp-a-h"></h3><button type="button" class="btn sm" data-use="a">Use this theme</button></header>
+          <div class="cmp-sw" aria-hidden="true"></div><div class="cmp-health"></div><div class="cmp-view"></div>
+        </article>
+        <article class="cmp-side" id="cmp-b" aria-labelledby="cmp-b-h">
+          <header><h3 id="cmp-b-h"></h3><button type="button" class="btn sm" data-use="b">Use this theme</button></header>
+          <div class="cmp-sw" aria-hidden="true"></div><div class="cmp-health"></div><div class="cmp-view"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- HEALTH -->
+    <section class="view" id="view-health" role="tabpanel">
+      <h2 class="hl-title" id="hlTitle">Checking…</h2>
+      <p class="note" id="hlSub"></p>
+      <div class="hl-cats" id="hlCats"></div>
+      <ul class="hl-list" id="hlList"></ul>
+    </section>
+
+    <!-- LAYOUT CHECKS -->
+    <section class="view" id="view-checks" role="tabpanel">
+      <p class="note">The real dashboard and reading screens, rendered off-screen at each width with your current strategy and breakpoints. Overflow fails. Text under 14 px and tap targets under 44 px warn, and fail below 12 px and 24 px. Reading line length passes at 45 to 75 characters (32 to 60 on phones under 480 px). "Long words" swaps in long Portuguese words to see whether the layout holds.</p>
+      <div id="ckOut"></div>
+    </section>
+
+    <!-- CSS -->
+    <section class="view" id="view-css" role="tabpanel">
+      <div class="css-wrap">
+        <div class="css-head">
+          <div>
+            <h2>CSS variables</h2>
+            <div class="seg" role="radiogroup" aria-label="Which CSS to show">
+              <label><input type="radio" name="csskind" value="shared" checked><span>tokens.css</span></label>
+              <label><input type="radio" name="csskind" value="preview"><span>Preview variables</span></label>
+            </div>
+            <p class="note" id="cssNote"></p>
+          </div>
+          <div class="css-actions">
+            <button class="btn" id="btnCopyCss" type="button">Copy</button>
+            <button class="btn solid" id="btnDownloadCss" type="button">Download</button>
+          </div>
+        </div>
+        <pre class="code" id="cssOut" tabindex="0" aria-label="Generated CSS variables"></pre>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>

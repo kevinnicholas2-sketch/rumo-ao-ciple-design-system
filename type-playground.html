@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  :root {
+    --bg: #FBF6EA;
+    --panel: #F3EDDC;
+    --ink: #1A2620;
+    --muted: #5C675F;
+    --line: #DDD5BF;
+    --green: #0F5C3A;
+    --red: #B3261E;
+    --red-bg: #FBE9E7;
+    --focus: #1E4F94;
+    --ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* applied live from the pickers */
+    --font-h: 'Source Serif 4', Georgia, serif;
+    --font-b: 'Source Sans 3', system-ui, sans-serif;
+    --w-body: 400; --w-label: 500; --w-subheading: 600; --w-button: 600; --w-heading: 700;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--ui); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  header.page { padding: 32px 0 20px; }
+  header.page h1 { margin: 0; font: 700 28px/1.15 var(--ui); }
+  header.page p { margin: 6px 0 0; color: var(--muted); }
+
+  .controls { background: var(--panel); border-block: 1px solid var(--line); }
+  @media (min-height: 820px) and (min-width: 761px) { .controls { position: sticky; top: 0; z-index: 5; } }
+  .controls .wrap { display: grid; gap: 16px 24px; padding-block: 16px; }
+  .row-a { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .row-b { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: end; }
+  .field { display: grid; gap: 6px; min-width: 0; }
+  .field label { font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+  .field output { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 400; }
+  .hint { font-size: 12.5px; color: var(--muted); min-height: 1.2em; }
+  .hint.err { color: var(--red); }
+  input[type=range] { width: 100%; accent-color: var(--green); margin: 0; height: 28px; }
+  select, input[type=number] { height: 38px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 10px; font: inherit; color: inherit; width: 100%; }
+  .swap { height: 38px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 0 14px; font: 600 14px var(--ui); cursor: pointer; white-space: nowrap; }
+  .swap:hover { background: #EFE8D4; }
+  .swap:active { transform: translateY(1px); }
+
+  h2.sec { font: 700 13px var(--ui); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+  .scale { padding: 20px 0 8px; }
+  .row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .meta { display: grid; gap: 2px; font-size: 13px; color: var(--muted); }
+  .meta b { color: var(--ink); font-size: 15px; }
+  .meta .px { font-variant-numeric: tabular-nums; color: var(--green); font-weight: 600; font-size: 15px; }
+  .meta .formula { font-size: 12px; }
+  .sample { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .sample.h { font-family: var(--font-h); }
+  .sample.body { font-family: var(--font-b); }
+  .meta .sp { font-size: 12px; font-variant-numeric: tabular-nums; }
+
+  /* weight roles */
+  .roles { padding: 24px 0 64px; border-top: 2px solid var(--line); }
+  .roles > p { margin: 4px 0 16px; color: var(--muted); max-width: 70ch; }
+  table.rt { width: 100%; border-collapse: collapse; }
+  .rt th { text-align: left; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); }
+  .rt td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .rt td.rn { font-weight: 600; white-space: nowrap; }
+  .rt td.rn small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+  .rt input[type=number] { width: 84px; font-variant-numeric: tabular-nums; }
+  .rt input.bad { border-color: var(--red); background: var(--red-bg); color: var(--red); font-weight: 600; }
+  .smp { min-width: 0; }
+  .smp.heading { font-family: var(--font-h); font-weight: var(--w-heading); font-size: 28px; line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+  .smp.subheading { font-family: var(--font-h); font-weight: var(--w-subheading); font-size: 20px; line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
+  .smp.body { font-family: var(--font-b); font-weight: var(--w-body); font-size: 16px; line-height: var(--lh-body); letter-spacing: var(--ls-body); }
+  .smp.label { font-family: var(--font-b); font-weight: var(--w-label); font-size: 13px; line-height: var(--lh-label); letter-spacing: var(--ls-label); text-transform: uppercase; }
+  .smp.button button { font-family: var(--font-b); font-weight: var(--w-button); font-size: 16px; background: var(--green); color: #fff; border: 0; border-radius: 8px; padding: 10px 18px; cursor: default; line-height: var(--lh-button); letter-spacing: var(--ls-button); text-transform: var(--tt-button); }
+  /* line height + tracking table */
+  .sp-sec { padding: 24px 0 8px; border-top: 2px solid var(--line); }
+  .sp-sec > p { margin: 4px 0 16px; color: var(--muted); max-width: 70ch; }
+  .sp-sec table.rt input[type=number] { width: 92px; }
+  .sp-sec .px2 { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12.5px; display: block; margin-top: 4px; }
+  .pv { min-width: 0; }
+  .pv.heading { font-family: var(--font-h); }
+  .pv.body, .pv.label, .pv.button { font-family: var(--font-b); }
+  .pv.label { text-transform: uppercase; }
+  .caps { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .note.ok { color: var(--green); font-weight: 600; }
+  .note.warn { color: #8A5A00; font-weight: 600; }
+  .note { font-size: 13px; max-width: 38ch; }
+  .note small { display: block; font-weight: 400; color: var(--muted); }
+  .status { font-size: 13px; max-width: 34ch; }
+  .status.ok { color: var(--green); font-weight: 600; }
+  .status.bad { color: var(--red); font-weight: 600; }
+
+  .ships { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+  .ship { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .ship h3 { margin: 0 0 2px; font-size: 14px; }
+  .ship .range { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-variant-numeric: tabular-nums; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+  .chip.used { border-color: var(--green); background: #E4EFE7; color: var(--green); font-weight: 600; }
+  details.all { margin-top: 16px; }
+  details.all summary { cursor: pointer; font-weight: 600; }
+  details.all table { border-collapse: collapse; margin-top: 8px; width: 100%; font-size: 14px; }
+  details.all td, details.all th { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line); }
+  details.all th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  @media (max-width: 760px) {
+    .row-a, .row-b { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .meta { grid-auto-flow: column; justify-content: start; gap: 12px; align-items: baseline; }
+    .rt thead { display: none; }
+    .rt, .rt tbody, .rt tr, .rt td { display: block; }
+    .rt tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .rt td { border: 0; padding: 4px 0; }
+    .ships { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="page"><div class="wrap">
+  <nav aria-label="Pages" style="font-size:14px;margin-bottom:8px"><a href="index.html">← Design system</a> · <a href="color-playground.html">Color playground</a></nav>
+  <h1>Type playground</h1>
+  <p>A modular scale: each step is the base size multiplied by the ratio.</p>
+</div></header>
+
+<section class="controls" aria-label="Type scale controls"><div class="wrap">
+  <div class="row-a">
+    <div class="field">
+      <label for="base">Base body size <output id="baseOut" for="base"></output></label>
+      <input id="base" type="range" min="12" max="24" step="1" value="16">
+    </div>
+    <div class="field">
+      <label for="preset">Ratio preset</label>
+      <select id="preset">
+        <option value="1.2">Minor Third 1.2</option>
+        <option value="1.25" selected>Major Third 1.25</option>
+        <option value="1.333">Perfect Fourth 1.333</option>
+        <option value="1.618">Golden Ratio 1.618</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="ratio">Custom ratio <output id="ratioOut" for="ratio"></output></label>
+      <input id="ratio" type="range" min="1.1" max="1.7" step="0.001" value="1.25">
+    </div>
+  </div>
+  <div class="row-b">
+    <div class="field">
+      <label for="hfont">Heading font</label>
+      <select id="hfont"></select>
+      <span class="hint" id="hHint"></span>
+    </div>
+    <button class="swap" id="swap" type="button" aria-label="Swap heading and body fonts">⇄ Swap</button>
+    <div class="field">
+      <label for="bfont">Body font</label>
+      <select id="bfont"></select>
+      <span class="hint" id="bHint"></span>
+    </div>
+  </div>
+</div></section>
+
+<main class="wrap">
+  <div class="scale" aria-live="polite">
+    <div class="row">
+      <div class="meta"><b>H1</b><span class="px" data-px="h1"></span><span class="formula" data-f="h1"></span><span class="sp" data-sp="h1"></span></div>
+      <h1 class="sample h" data-s="h1" style="margin:0">Rumo ao CIPLE</h1>
+    </div>
+    <div class="row">
+      <div class="meta"><b>H2</b><span class="px" data-px="h2"></span><span class="formula" data-f="h2"></span><span class="sp" data-sp="h2"></span></div>
+      <h2 class="sample h" data-s="h2" style="margin:0">Rumo ao CIPLE</h2>
+    </div>
+    <div class="row">
+      <div class="meta"><b>H3</b><span class="px" data-px="h3"></span><span class="formula" data-f="h3"></span><span class="sp" data-sp="h3"></span></div>
+      <h3 class="sample h" data-s="h3" style="margin:0">Rumo ao CIPLE</h3>
+    </div>
+    <div class="row">
+      <div class="meta"><b>Body</b><span class="px" data-px="body"></span><span class="formula" data-f="body"></span><span class="sp" data-sp="body"></span></div>
+      <p class="sample body" data-s="body">Rumo ao CIPLE</p>
+    </div>
+  </div>
+
+  <section class="sp-sec" aria-labelledby="spH">
+    <h2 class="sec" id="spH">Line height and tracking</h2>
+    <p>Set per step, not once for everything. Line height is a multiple of the font size; tracking is in em (a fraction of the font size). Guideline: body about 1.5; large headings 1.1 to 1.25 with slightly negative tracking; all-caps labels a little positive; buttons none, or a little if all caps; body about zero. A note turns amber when a value is outside that guideline. It is a nudge, not an error.</p>
+    <table class="rt">
+      <thead><tr><th scope="col">Step</th><th scope="col">Line height</th><th scope="col">Tracking (em)</th><th scope="col">Preview</th><th scope="col">Guideline</th></tr></thead>
+      <tbody id="spRows"></tbody>
+    </table>
+  </section>
+
+  <section class="roles" aria-labelledby="rolesH">
+    <h2 class="sec" id="rolesH">Weight roles</h2>
+    <p>Each role maps to a weight number. Headings and subheadings use the heading font; body, labels and buttons use the body font. H1 and H2 above use the heading role, H3 uses the subheading role, and body uses the body role.</p>
+    <table class="rt">
+      <thead><tr><th scope="col">Role</th><th scope="col">Weight</th><th scope="col">Sample</th><th scope="col">Status</th></tr></thead>
+      <tbody id="roleRows"></tbody>
+    </table>
+
+    <div class="ships" aria-live="polite">
+      <div class="ship"><h3 id="shipHName"></h3><div class="range" id="shipHRange"></div><div class="chips" id="shipHChips"></div></div>
+      <div class="ship"><h3 id="shipBName"></h3><div class="range" id="shipBRange"></div><div class="chips" id="shipBChips"></div></div>
+    </div>
+    <details class="all">
+      <summary>Weights shipped by every font in the lists</summary>
+      <table><thead><tr><th>Font</th><th>Weights shipped</th></tr></thead><tbody id="allFonts"></tbody></table>
+    </details>
+  </section>
+</main>
+
+<script>
+(() => {
+  /* ---------- EDIT HERE: your shortlists ----------
+     Each name must exist in FONT_DB below. To add a font, add one line there
+     (weights: [min, max] for a variable font, or a plain list for static fonts). */
+  const HEADING_SHORTLIST = ['Source Serif 4', 'Fraunces', 'Literata', 'Lora'];
+  const BODY_SHORTLIST    = ['Source Sans 3', 'Inter', 'DM Sans', 'Nunito Sans', 'Atkinson Hyperlegible'];
+
+  const FONT_DB = {
+    'Source Serif 4':        { kind: 'serif', variable: [200, 900] },
+    'Fraunces':              { kind: 'serif', variable: [100, 900] },
+    'Literata':              { kind: 'serif', variable: [200, 900] },
+    'Lora':                  { kind: 'serif', variable: [400, 700] },
+    'Source Sans 3':         { kind: 'sans',  variable: [200, 900] },
+    'Inter':                 { kind: 'sans',  variable: [100, 900] },
+    'DM Sans':               { kind: 'sans',  variable: [100, 1000] },
+    'Nunito Sans':           { kind: 'sans',  variable: [200, 1000] },
+    'Atkinson Hyperlegible': { kind: 'sans',  list: [400, 700] },
+  };
+
+  const ROLES = [
+    { key: 'body',       label: 'Body',       use: 'b', sample: 'Hoje é sábado. A Ana vai à pastelaria da rua das Flores.', def: 400 },
+    { key: 'label',      label: 'Label',      use: 'b', sample: 'Nível A2 · Leitura', def: 500 },
+    { key: 'subheading', label: 'Subheading', use: 'h', sample: 'Na pastelaria', def: 600 },
+    { key: 'button',     label: 'Button',     use: 'b', sample: null, def: 600 },
+    { key: 'heading',    label: 'Heading',    use: 'h', sample: 'Rumo ao CIPLE', def: 700 },
+  ];
+
+  const $ = id => document.getElementById(id);
+
+  /* ---------- font data helpers ---------- */
+  const spec = n => FONT_DB[n];
+  const has = (n, w) => { const f = spec(n); return f.list ? f.list.includes(w) : (w >= f.variable[0] && w <= f.variable[1] && Number.isInteger(w)); };
+  const steps = n => { const f = spec(n); if (f.list) return f.list; const out = []; for (let w = Math.ceil(f.variable[0] / 100) * 100; w <= f.variable[1]; w += 100) out.push(w); return out; };
+  const shipsText = n => { const f = spec(n); return f.list ? 'static: ' + f.list.join(', ') : `variable, any value from ${f.variable[0]} to ${f.variable[1]}`; };
+  const avail = n => { const f = spec(n); if (f.list) return f.list; const o = []; for (let w = f.variable[0]; w <= f.variable[1]; w++) o.push(w); return o; };
+
+  // CSS font matching: what the browser picks when the exact weight is missing.
+  function nearest(n, target) {
+    const a = avail(n);
+    if (a.includes(target)) return target;
+    const up = a.filter(w => w > target).sort((x, y) => x - y);
+    const down = a.filter(w => w < target).sort((x, y) => y - x);
+    if (target >= 400 && target <= 500) {
+      const mid = up.filter(w => w <= 500);
+      return (mid[0] ?? down[0] ?? up[0]);
+    }
+    if (target < 400) return down[0] ?? up[0];
+    return up[0] ?? down[0];
+  }
+
+  /* ---------- loading from Google Fonts ---------- */
+  const loaded = {};   // name -> 'loading' | 'ok' | 'err'
+  function loadFont(name, done) {
+    if (loaded[name] === 'ok' || loaded[name] === 'err') { done && done(loaded[name]); return; }
+    if (loaded[name] === 'loading') { (loadFont.q[name] = loadFont.q[name] || []).push(done); return; }
+    loaded[name] = 'loading';
+    loadFont.q[name] = [done];
+    const f = spec(name);
+    const w = f.list ? f.list.join(';') : `${f.variable[0]}..${f.variable[1]}`;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${name.replace(/ /g, '+')}:wght@${w}&display=swap`;
+    const finish = status => { loaded[name] = status; (loadFont.q[name] || []).forEach(cb => cb && cb(status)); loadFont.q[name] = []; };
+    link.onload = () => {
+      // the stylesheet is in; wait for the actual font file so the sample is not measured in a fallback
+      (document.fonts ? document.fonts.load(`400 16px "${name}"`) : Promise.resolve()).then(() => finish('ok'), () => finish('ok'));
+    };
+    link.onerror = () => finish('err');
+    document.head.appendChild(link);
+  }
+  loadFont.q = {};
+
+  /* ---------- state ---------- */
+  const state = { h: HEADING_SHORTLIST[0], b: BODY_SHORTLIST[0], roles: Object.fromEntries(ROLES.map(r => [r.key, r.def])) };
+  const stack = n => `'${n}', ${spec(n).kind === 'serif' ? 'Georgia, serif' : 'system-ui, sans-serif'}`;
+
+  function fillSelect(sel, own, other, current) {
+    const og = (label, list) => `<optgroup label="${label}">${list.map(n => `<option${n === current ? ' selected' : ''}>${n}</option>`).join('')}</optgroup>`;
+    sel.innerHTML = og(sel.id === 'hfont' ? 'Heading shortlist' : 'Body shortlist', own) + og('From the other shortlist', other.filter(n => !own.includes(n)));
+    sel.value = current;
+  }
+
+  /* ---------- line height + tracking, per step ---------- */
+  const SP = [
+    { key: 'h1',     label: 'H1',     kind: 'heading', role: 'heading',    lh: 1.1,  ls: -0.02,  preview: 'Rumo ao<br>CIPLE' },
+    { key: 'h2',     label: 'H2',     kind: 'heading', role: 'heading',    lh: 1.15, ls: -0.015, preview: 'Rumo ao<br>CIPLE' },
+    { key: 'h3',     label: 'H3',     kind: 'heading', role: 'subheading', lh: 1.25, ls: -0.01,  preview: 'Rumo ao<br>CIPLE' },
+    { key: 'body',   label: 'Body',   kind: 'body',    role: 'body',       lh: 1.5,  ls: 0,      preview: 'Rumo ao CIPLE, hoje é sábado.<br>A Ana vai à pastelaria.' },
+    { key: 'label',  label: 'Label (all caps)', kind: 'label', role: 'label', lh: 1.4, ls: 0.08,  preview: 'Nível A2<br>Leitura' },
+    { key: 'button', label: 'Button', kind: 'button',  role: 'button',     lh: 1.2,  ls: 0,      preview: 'Verificar resposta' },
+  ];
+  const spState = Object.fromEntries(SP.map(r => [r.key, { lh: r.lh, ls: r.ls }]));
+  let btnCaps = false;
+  const sizes = { h1: 0, h2: 0, h3: 0, body: 16, label: 13, button: 16 };
+  const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
+
+  function guideline(r) {
+    const v = spState[r.key], out = [];
+    const inR = (x, lo, hi) => x >= lo - 1e-9 && x <= hi + 1e-9;
+    if (r.kind === 'heading') {
+      if (!inR(v.lh, 1.1, 1.25)) out.push(`Line height ${v.lh} is outside 1.1–1.25 for large headings.`);
+      if (v.ls > 0 || v.ls < -0.04) out.push(`Tracking ${sgn(v.ls)}em is outside slightly negative (0 to −0.04em).`);
+    } else if (r.kind === 'body') {
+      if (!inR(v.lh, 1.4, 1.6)) out.push(`Line height ${v.lh} is outside about 1.5 (1.4–1.6).`);
+      if (!inR(v.ls, -0.01, 0.01)) out.push(`Tracking ${sgn(v.ls)}em is outside about zero (±0.01em).`);
+    } else if (r.kind === 'label') {
+      if (!inR(v.ls, 0.02, 0.15)) out.push(`Tracking ${sgn(v.ls)}em is outside a little positive (0.02–0.15em).`);
+    } else if (r.kind === 'button') {
+      if (btnCaps ? !inR(v.ls, 0.02, 0.1) : !inR(v.ls, -0.01, 0.01))
+        out.push(btnCaps ? `All-caps button: tracking ${sgn(v.ls)}em is outside a little positive (0.02–0.1em).` : `Tracking ${sgn(v.ls)}em is outside none (±0.01em).`);
+    }
+    return out;
+  }
+
+  function buildSpacing() {
+    $('spRows').innerHTML = SP.map(r => `
+      <tr data-sp-row="${r.key}">
+        <td class="rn">${r.label}${r.key === 'button' ? '<label class="caps"><input type="checkbox" id="btnCaps"> All caps</label>' : ''}<small data-lbox></small></td>
+        <td><input type="number" id="lh-${r.key}" min="0.8" max="2.5" step="0.05" value="${r.lh}" aria-label="${r.label} line height"></td>
+        <td><input type="number" id="ls-${r.key}" min="-0.1" max="0.3" step="0.005" value="${r.ls}" aria-label="${r.label} tracking in em"></td>
+        <td class="pv ${r.kind}" data-pv>${r.kind === 'button' ? '<span class="smp button"><button type="button" tabindex="-1">' + r.preview + '</button></span>' : r.preview}</td>
+        <td class="note" id="gl-${r.key}" role="status"></td>
+      </tr>`).join('');
+    $('spRows').addEventListener('input', e => {
+      const el = e.target;
+      if (el.id === 'btnCaps') {
+        btnCaps = el.checked;
+        const ls = spState.button.ls;
+        if (btnCaps && ls === 0) spState.button.ls = 0.04; else if (!btnCaps && ls === 0.04) spState.button.ls = 0;
+        $('ls-button').value = spState.button.ls;
+        return renderSpacing();
+      }
+      const m = /^(lh|ls)-(\w+)$/.exec(el.id || ''); if (!m) return;
+      const v = parseFloat(el.value);
+      if (Number.isFinite(v)) { spState[m[2]][m[1]] = v; renderSpacing(); }
+    });
+  }
+
+  function renderSpacing() {
+    const root = document.documentElement.style;
+    root.setProperty('--tt-button', btnCaps ? 'uppercase' : 'none');
+    SP.forEach(r => {
+      const v = spState[r.key];
+      root.setProperty('--lh-' + r.key, v.lh);
+      root.setProperty('--ls-' + r.key, v.ls + 'em');
+      const size = sizes[r.key];
+      const row = document.querySelector(`[data-sp-row="${r.key}"]`);
+      const pv = row.querySelector('[data-pv]');
+      const shown = r.kind === 'heading' ? Math.min(size, 40) : size;     // keep the two-line preview readable on huge steps
+      pv.style.fontSize = shown + 'px';
+      pv.style.lineHeight = v.lh;
+      pv.style.letterSpacing = v.ls + 'em';
+      pv.style.fontWeight = `var(--w-${r.role})`;
+      if (r.kind === 'button') { const b = pv.querySelector('button'); b.style.fontSize = '16px'; pv.style.fontSize = '16px'; }
+      row.querySelector('[data-lbox]').textContent = `${Math.round(size * 10) / 10} px × ${v.lh} = ${Math.round(size * v.lh * 10) / 10} px line box`;
+      const g = guideline(r), cell = $('gl-' + r.key);
+      cell.className = 'note ' + (g.length ? 'warn' : 'ok');
+      cell.innerHTML = g.length ? g.map(t => `<div>${t}</div>`).join('') : '✓ Within the guideline';
+      const tag = document.querySelector(`[data-sp="${r.key}"]`);
+      if (tag) tag.textContent = `line height ${v.lh} · tracking ${sgn(v.ls)}em`;
+    });
+  }
+
+  /* ---------- modular scale ---------- */
+  const base = $('base'), ratio = $('ratio'), preset = $('preset');
+  const PRESETS = [1.2, 1.25, 1.333, 1.618];
+  const fmt = n => (Math.round(n * 10) / 10).toString();
+  const EXP = { body: 0, h3: 2, h2: 3, h1: 4 };
+  const SUP = ['', '', '²', '³', '⁴'];
+  const SCALE_ROLE = { body: 'body', h3: 'subheading', h2: 'heading', h1: 'heading' };
+
+  function renderScale() {
+    const b = parseFloat(base.value), r = parseFloat(ratio.value);
+    $('baseOut').textContent = b + ' px';
+    $('ratioOut').textContent = r.toFixed(3);
+    for (const [key, e] of Object.entries(EXP)) {
+      const size = b * Math.pow(r, e);
+      const el = document.querySelector(`[data-s="${key}"]`);
+      el.style.fontSize = size + 'px';
+      el.style.fontWeight = `var(--w-${SCALE_ROLE[key]})`;
+      el.style.lineHeight = `var(--lh-${key})`;
+      el.style.letterSpacing = `var(--ls-${key})`;
+      sizes[key] = size;
+      document.querySelector(`[data-px="${key}"]`).textContent = fmt(size) + ' px';
+      document.querySelector(`[data-f="${key}"]`).textContent = e === 0 ? 'base' : `base × ratio${SUP[e]}`;
+    }
+    renderSpacing();
+  }
+  base.addEventListener('input', renderScale);
+  ratio.addEventListener('input', () => { const r = parseFloat(ratio.value); preset.value = PRESETS.includes(r) ? String(r) : 'custom'; renderScale(); });
+  preset.addEventListener('change', () => { if (preset.value !== 'custom') ratio.value = preset.value; renderScale(); });
+
+  /* ---------- fonts + roles ---------- */
+  function hint(el, name) {
+    const s = loaded[name];
+    el.className = 'hint' + (s === 'err' ? ' err' : '');
+    el.textContent = s === 'loading' ? 'Loading from Google Fonts…' : s === 'err' ? 'Could not load from Google Fonts (offline?). Showing a fallback font.' : 'Loaded from Google Fonts';
+  }
+
+  function applyFonts() {
+    document.documentElement.style.setProperty('--font-h', stack(state.h));
+    document.documentElement.style.setProperty('--font-b', stack(state.b));
+    hint($('hHint'), state.h); hint($('bHint'), state.b);
+    [[state.h, 'hHint'], [state.b, 'bHint']].forEach(([n, id]) => loadFont(n, () => { hint($(id), id === 'hHint' ? state.h : state.b); renderRoles(); }));
+    renderRoles();
+  }
+
+  function fontFor(role) { return role.use === 'h' ? state.h : state.b; }
+
+  function buildRoles() {
+    $('roleRows').innerHTML = ROLES.map(r => `
+      <tr data-role="${r.key}">
+        <td class="rn">${r.label}<small data-which></small></td>
+        <td><input type="number" id="w-${r.key}" min="100" max="1000" step="50" value="${state.roles[r.key]}" aria-label="${r.label} weight"></td>
+        <td class="smp ${r.key}">${r.sample ? r.sample : '<button type="button" tabindex="-1">Verificar resposta</button>'}</td>
+        <td class="status" id="st-${r.key}" role="status"></td>
+      </tr>`).join('');
+    $('roleRows').addEventListener('input', e => {
+      const el = e.target; if (!el.id || !el.id.startsWith('w-')) return;
+      const v = parseInt(el.value, 10);
+      if (Number.isFinite(v) && v >= 1 && v <= 1000) { state.roles[el.id.slice(2)] = v; renderRoles(); }
+    });
+  }
+
+  function renderRoles() {
+    const root = document.documentElement.style;
+    const used = { h: new Set(), b: new Set() };
+    ROLES.forEach(r => {
+      const w = state.roles[r.key], name = fontFor(r);
+      root.setProperty('--w-' + r.key, w);
+      used[r.use].add(w);
+      const ok = has(name, w);
+      const input = $('w-' + r.key), st = $('st-' + r.key);
+      input.classList.toggle('bad', !ok);
+      document.querySelector(`[data-role="${r.key}"] [data-which]`).textContent = name;
+      if (ok) {
+        st.className = 'status ok'; st.textContent = '✓ ' + w + ' is in ' + name;
+      } else {
+        const n = nearest(name, w);
+        const fake = w >= 600 && n < 600;
+        st.className = 'status bad';
+        st.textContent = `✗ ${name} doesn't ship ${w}. The browser would fake it: it would use ${n}${fake ? ' and draw synthetic bold on top' : ''}.`;
+      }
+    });
+    renderShips(used);
+  }
+
+  function renderShips(used) {
+    [['H', state.h, 'h'], ['B', state.b, 'b']].forEach(([k, name, u]) => {
+      $('ship' + k + 'Name').textContent = (k === 'H' ? 'Heading font: ' : 'Body font: ') + name;
+      $('ship' + k + 'Range').textContent = 'Ships ' + shipsText(name);
+      $('ship' + k + 'Chips').innerHTML = steps(name).map(w => `<span class="chip${used[u].has(w) ? ' used' : ''}">${w}</span>`).join('') +
+        [...used[u]].filter(w => !steps(name).includes(w) && has(name, w)).map(w => `<span class="chip used">${w}</span>`).join('');
+    });
+  }
+
+  function buildAll() {
+    $('allFonts').innerHTML = Object.keys(FONT_DB).map(n => `<tr><td>${n}</td><td>${steps(n).join(' ')}${spec(n).list ? '' : ' <span style="color:var(--muted)">(variable: ' + spec(n).variable[0] + '–' + spec(n).variable[1] + ')</span>'}</td></tr>`).join('');
+  }
+
+  function buildPickers() {
+    const all = [...HEADING_SHORTLIST, ...BODY_SHORTLIST];
+    fillSelect($('hfont'), HEADING_SHORTLIST, all, state.h);
+    fillSelect($('bfont'), BODY_SHORTLIST, all, state.b);
+  }
+
+  $('hfont').addEventListener('change', e => { state.h = e.target.value; applyFonts(); });
+  $('bfont').addEventListener('change', e => { state.b = e.target.value; applyFonts(); });
+  $('swap').addEventListener('click', () => {
+    [state.h, state.b] = [state.b, state.h];
+    $('hfont').value = state.h; $('bfont').value = state.b;
+    applyFonts();
+  });
+
+  buildRoles(); buildSpacing(); buildPickers(); buildAll(); renderScale(); applyFonts();
+})();
+</script>
+</body>
+</html>

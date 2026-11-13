@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Share Playground</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* Page chrome uses fixed colors so editing a token only changes the preview. */
+  :root { --pg-bg: #FAFAF7; --pg-ink: #1B1B22; --pg-muted: #62626E; --pg-line: #E1E0D8; --pg-focus: #1E4F94; --pg-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--pg-bg); color: var(--pg-ink); font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  :focus-visible { outline: 2px solid var(--pg-focus); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  header.page { padding: 28px 0 12px; }
+  header.page nav { font-size: 14px; margin-bottom: 8px; }
+  header.page h1 { margin: 0; font-size: 28px; line-height: 1.15; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  header.page p { margin: 6px 0 0; color: var(--pg-muted); max-width: 70ch; }
+  .ro { font-size: 13px; font-weight: 700; background: #F4E3B0; color: #5B4300; padding: 4px 12px; border-radius: 999px; }
+  .cols { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 28px; align-items: start; padding-block: 16px 24px; }
+  .panel { display: grid; gap: 20px; }
+  .box { background: #fff; border: 1px solid var(--pg-line); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+  h2 { margin: 0; font-size: 13px; letter-spacing: .09em; text-transform: uppercase; color: var(--pg-muted); }
+  .fld { display: grid; gap: 4px; }
+  .fld .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .fld label { font: 700 13px var(--pg-mono); }
+  .fld output { font: 600 12px var(--pg-mono); color: var(--pg-muted); }
+  .fld input[type=range] { width: 100%; accent-color: var(--pg-ink); }
+  .fld input[type=color] { width: 100%; height: 38px; padding: 2px; border: 1px solid var(--pg-line); border-radius: 8px; background: #fff; cursor: pointer; }
+  .btn { font: inherit; font-weight: 600; padding: 9px 16px; border: 1px solid var(--pg-line); border-radius: 8px; background: #fff; color: var(--pg-ink); cursor: pointer; }
+  .btn.dark { background: var(--pg-ink); color: #fff; border-color: var(--pg-ink); }
+  .btn.sm { padding: 5px 10px; font-size: 13px; }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  ul.saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  ul.saved li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--pg-line); border-radius: 8px; padding: 8px 10px; }
+  ul.saved .nm { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  ul.saved .sws { display: flex; }
+  ul.saved .sws i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,.2); margin-left: -4px; }
+  .empty { color: var(--pg-muted); font-size: 14px; margin: 0; }
+  .where { font-size: 13px; color: var(--pg-muted); margin: 0; border-left: 3px solid var(--pg-line); padding-left: 10px; }
+  .linkout { width: 100%; font: 12px var(--pg-mono); padding: 6px 8px; border: 1px solid var(--pg-line); border-radius: 6px; }
+  .note { margin: 0; padding: 10px 12px; border-radius: 8px; background: #FBE9E7; color: #7A1A14; font-weight: 600; font-size: 14px; }
+  .vals { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font: 13px var(--pg-mono); }
+  .vals dt { color: var(--pg-muted); } .vals dd { margin: 0; font-weight: 600; }
+  dialog { border: 1px solid var(--pg-line); border-radius: 12px; padding: 20px; max-width: 360px; width: calc(100% - 32px); }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog form { display: grid; gap: 12px; }
+  dialog input[type=text] { font: inherit; padding: 8px 10px; border: 1px solid var(--pg-line); border-radius: 8px; width: 100%; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--pg-ink); color: #fff; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 50; }
+  .toast.on { opacity: 1; }
+
+  /* ---------- Preview: only var(--token) references ---------- */
+  .stage { background: var(--color-bg); border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-8); display: grid; gap: var(--space-4); }
+  .card { background: var(--color-surface); color: var(--color-text); font-family: var(--font-body); font-size: var(--type-base); line-height: var(--line-height-body);
+          border: var(--border-width-default) solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); padding: var(--space-4); display: grid; gap: var(--space-3); }
+  .card h3 { margin: 0; font-family: var(--font-heading); font-size: var(--font-size-lg); line-height: var(--line-height-heading); }
+  .card p { margin: 0; color: var(--color-muted); }
+  .go { justify-self: start; font-family: var(--font-body); font-size: var(--type-base); font-weight: var(--font-weight-semibold); background: var(--color-primary); color: var(--color-on-primary);
+        border: 0; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); cursor: pointer; }
+  .go:focus-visible { outline: var(--border-width-focus) solid var(--color-focus); outline-offset: var(--border-width-default); }
+
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="page"><div class="wrap">
+  <nav aria-label="Pages"><a href="index.html">← Design system</a> · <a href="token-cascade.html">Token cascade</a> · <a href="shape-playground.html">Shape</a></nav>
+  <h1>Share playground <span class="ro" id="roBadge" hidden>Read-only</span></h1>
+  <p class="where" id="srcNote" hidden></p>
+  <p id="intro">Edit five tokens, save themes in this browser, and share a view-only link.</p>
+</div></header>
+
+<main class="wrap">
+  <div id="linkErr" class="note" hidden>That link's theme could not be read, so the editor is shown with the defaults.</div>
+  <div class="cols">
+    <div class="panel">
+      <section class="box" id="editor" aria-labelledby="eH">
+        <h2 id="eH">Tokens</h2>
+        <div class="fld"><div class="top"><label for="in-primary">--color-primary</label><output id="o-primary"></output></div><input type="color" id="in-primary"></div>
+        <div class="fld"><div class="top"><label for="in-surface">--color-surface</label><output id="o-surface"></output></div><input type="color" id="in-surface"></div>
+        <div class="fld"><div class="top"><label for="in-radius">--radius-md</label><output id="o-radius"></output></div><input type="range" id="in-radius" min="0" max="32" step="1"></div>
+        <div class="fld"><div class="top"><label for="in-space">--space-4</label><output id="o-space"></output></div><input type="range" id="in-space" min="8" max="32" step="1"></div>
+        <div class="fld"><div class="top"><label for="in-type">--type-base</label><output id="o-type"></output></div><input type="range" id="in-type" min="12" max="24" step="1"></div>
+        <div class="row"><button type="button" class="btn sm" id="reset">Reset to tokens.css</button></div>
+      </section>
+
+      <section class="box" id="saving" aria-labelledby="sH">
+        <h2 id="sH">Saved themes</h2>
+        <div class="row"><button type="button" class="btn dark" id="save">Save theme</button><button type="button" class="btn" id="share">Copy view-only link</button></div>
+        <input class="linkout" id="linkOut" type="text" readonly hidden aria-label="Share link">
+        <ul class="saved" id="list"></ul>
+        <p class="empty" id="none" hidden>No saved themes yet.</p>
+        <p class="note" id="noStore" hidden>Saving is unavailable here because the browser is blocking local storage.</p>
+        <p class="where" id="where">Saved themes live in this browser's local storage, on this device only. Nobody else can see them and nothing is sent anywhere. A shared link carries these five values in its address, so anyone who has the link can see them. Clearing site data deletes your saved themes.</p>
+      </section>
+
+      <section class="box" id="valsBox" aria-labelledby="vH" hidden>
+        <h2 id="vH">Values in this link</h2>
+        <dl class="vals" id="vals"></dl>
+      </section>
+    </div>
+
+    <section aria-labelledby="pH">
+      <h2 id="pH" style="margin-bottom:12px">Preview</h2>
+      <div class="stage" lang="pt-PT">
+        <div class="card"><h3>Próxima sessão</h3><p>Leitura: na pastelaria. Um texto curto e três perguntas.</p><button type="button" class="go">Continuar leitura</button></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm">
+  <label for="themeName"><b>Name this theme</b></label>
+  <input type="text" id="themeName" maxlength="40" autocomplete="off">
+  <div class="row" style="justify-content:flex-end"><button type="button" class="btn" id="dlgCancel">Cancel</button><button type="submit" class="btn dark">Save</button></div>
+</form></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const root = document.documentElement;
+  const KEYS = ['color-primary', 'color-surface', 'radius-md', 'space-4', 'type-base'];
+  const RANGES = { 'radius-md': [0, 32], 'space-4': [8, 32], 'type-base': [12, 24] };
+  const STORE = 'share-playground-themes';
+  const HEX = /^#[0-9a-f]{6}$/i;
+  let v = {}, defaults = {};
+
+  /* ---- validation: a link or saved entry is untrusted, so only known keys with sane values are accepted ---- */
+  function clean(o) {
+    if (!o || typeof o !== 'object') return null;
+    const out = {};
+    for (const k of KEYS) {
+      if (k.startsWith('color-')) { if (typeof o[k] !== 'string' || !HEX.test(o[k])) return null; out[k] = o[k].toUpperCase(); }
+      else { const n = Number(o[k]); if (!Number.isFinite(n)) return null; out[k] = Math.min(RANGES[k][1], Math.max(RANGES[k][0], Math.round(n))); }
+    }
+    return out;
+  }
+  const cssVal = (k, val) => k.startsWith('color-') ? val : val + 'px';
+
+  function apply() {
+    KEYS.forEach(k => root.style.setProperty('--' + k, cssVal(k, v[k])));
+    $('in-primary').value = v['color-primary']; $('in-surface').value = v['color-surface'];
+    $('in-radius').value = v['radius-md']; $('in-space').value = v['space-4']; $('in-type').value = v['type-base'];
+    $('o-primary').textContent = v['color-primary']; $('o-surface').textContent = v['color-surface'];
+    $('o-radius').textContent = v['radius-md'] + ' px'; $('o-space').textContent = v['space-4'] + ' px'; $('o-type').textContent = v['type-base'] + ' px';
+  }
+
+  /* ---- defaults come from tokens.css ---- */
+  function readDefaults() {
+    const cs = getComputedStyle(root), probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;height:0';
+    const px = name => { probe.style.width = `var(--${name})`; document.body.appendChild(probe); const w = probe.getBoundingClientRect().width; probe.remove(); return w; };
+    const d = {
+      'color-primary': cs.getPropertyValue('--color-primary').trim(), 'color-surface': cs.getPropertyValue('--color-surface').trim(),
+      'radius-md': px('radius-md'), 'space-4': px('space-4'), 'type-base': px('type-base'),
+    };
+    return clean(d) || clean({ 'color-primary': '#0F5C3A', 'color-surface': '#FFFFFF', 'radius-md': 8, 'space-4': 16, 'type-base': 16 });
+  }
+
+  /* ---- share links: s = base64 of a JSON object ---- */
+  const encode = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+  function decode(s) { try { return JSON.parse(decodeURIComponent(escape(atob(s.replace(/ /g, '+'))))); } catch (e) { return null; } }
+  const shareUrl = () => location.origin.replace(/^null$/, '') + location.pathname + '?s=' + encodeURIComponent(encode(v));
+
+  /* ---- local storage ---- */
+  let storeOk = true;
+  function load() { try { const a = JSON.parse(localStorage.getItem(STORE) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { storeOk = false; return []; } }
+  function save(list) { try { localStorage.setItem(STORE, JSON.stringify(list)); return true; } catch (e) { storeOk = false; return false; } }
+  function renderList() {
+    const list = load().map(t => ({ name: String(t.name || '').slice(0, 40), values: clean(t.values) })).filter(t => t.name && t.values);
+    $('noStore').hidden = storeOk; $('save').disabled = !storeOk;
+    $('none').hidden = !storeOk || list.length > 0;
+    const ul = $('list'); ul.innerHTML = '';
+    list.forEach((t, i) => {
+      const li = document.createElement('li');
+      const sws = document.createElement('span'); sws.className = 'sws';
+      ['color-primary', 'color-surface'].forEach(k => { const s = document.createElement('i'); s.style.background = t.values[k]; sws.appendChild(s); });
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = t.name;
+      const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'btn sm'; lb.textContent = 'Load'; lb.setAttribute('aria-label', 'Load ' + t.name);
+      lb.addEventListener('click', () => { v = { ...t.values }; apply(); toast('Loaded “' + t.name + '”'); });
+      const db = document.createElement('button'); db.type = 'button'; db.className = 'btn sm'; db.textContent = 'Delete'; db.setAttribute('aria-label', 'Delete ' + t.name);
+      db.addEventListener('click', () => { const l = load(); l.splice(i, 1); save(l); renderList(); toast('Deleted “' + t.name + '”'); });
+      li.append(sws, nm, lb, db); ul.appendChild(li);
+    });
+  }
+
+  let tt = 0;
+  function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2200); }
+
+  /* ---- editor wiring ---- */
+  const bind = (id, key, num) => $(id).addEventListener('input', e => { v[key] = num ? Number(e.target.value) : e.target.value.toUpperCase(); apply(); });
+  bind('in-primary', 'color-primary'); bind('in-surface', 'color-surface'); bind('in-radius', 'radius-md', 1); bind('in-space', 'space-4', 1); bind('in-type', 'type-base', 1);
+  $('reset').addEventListener('click', () => { v = { ...defaults }; apply(); });
+
+  $('save').addEventListener('click', () => { $('themeName').value = ''; $('dlg').showModal(); $('themeName').focus(); });
+  $('dlgCancel').addEventListener('click', () => $('dlg').close());
+  $('dlgForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('themeName').value.trim() || 'My theme';
+    const l = load(), i = l.findIndex(t => t.name === name), entry = { name, values: { ...v }, savedAt: new Date().toISOString() };
+    if (i >= 0) l[i] = entry; else l.push(entry);
+    $('dlg').close();
+    if (save(l)) toast(i >= 0 ? 'Replaced “' + name + '”' : 'Saved “' + name + '”'); else toast('Could not save');
+    renderList();
+  });
+
+  $('share').addEventListener('click', async () => {
+    const url = shareUrl(), out = $('linkOut'); out.hidden = false; out.value = url;
+    try { await navigator.clipboard.writeText(url); toast('View-only link copied'); }
+    catch (e) { out.select(); try { document.execCommand('copy'); toast('View-only link copied'); } catch (e2) { toast('Select the link and copy it'); } }
+  });
+
+  /* ---- start ---- */
+  function useMainTheme(param) {
+    // Defaults come from the main tool's current theme. A shared (read-only) link never uses it, so viewers see the same thing everywhere.
+    if (param !== null || new URLSearchParams(location.search).get('source') === 'file') return null;
+    try { const o = JSON.parse(localStorage.getItem('cip-tokens-css')); if (o && typeof o.css === 'string') { const st = document.createElement('style'); st.id = 'cip-theme'; st.textContent = o.css; document.head.appendChild(st); return o; } } catch (e) { /* no stored theme */ }
+    return null;
+  }
+  function init() {
+    const param = new URLSearchParams(location.search).get('s');
+    const main = useMainTheme(param);
+    if (main) { $('srcNote').hidden = false; $('srcNote').innerHTML = 'Defaults come from the main tool’s theme “' + main.name.replace(/[<>&"]/g, '') + '”. <a href="?source=file">Use the tokens.css file instead</a>.'; }
+    defaults = readDefaults(); v = { ...defaults };
+    if (param !== null) {
+      const shared = clean(decode(param));
+      if (shared) {
+        v = shared;
+        $('editor').hidden = true; $('saving').hidden = true;
+        $('roBadge').hidden = false; $('valsBox').hidden = false;
+        $('intro').textContent = 'A shared theme. You can look at it, but not change it.';
+        $('vals').innerHTML = KEYS.map(k => `<dt>--${k}</dt><dd>${cssVal(k, v[k])}</dd>`).join('');
+        document.title = 'Share Playground (read-only)';
+      } else $('linkErr').hidden = false;
+    }
+    apply(); renderList();
+  }
+  if (document.readyState === 'complete') init(); else window.addEventListener('load', init);
+})();
+</script>
+</body>
+</html>
